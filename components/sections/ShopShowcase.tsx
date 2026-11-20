@@ -30,7 +30,7 @@ export function ShopShowcase() {
     >
       {/* Title, then the lead with the shop button beside it, bottoms aligned in one row, so
           the button is never detached from its heading (audit issue 24). */}
-      <div className="container-page">
+      <Reveal from="left" className="container-page">
         <VerifyMarker verified={shopHeading.verified}>
           <SectionHeading
             id="shop-title"
@@ -51,7 +51,7 @@ export function ShopShowcase() {
             </AnimatedButton>
           </div>
         </VerifyMarker>
-      </div>
+      </Reveal>
 
       <div className="mt-14 md:mt-16">
         <ProductGallery

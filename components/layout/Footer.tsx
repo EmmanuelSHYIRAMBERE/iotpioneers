@@ -14,8 +14,10 @@ import { site } from "@/content/site";
 import { socialLinks } from "@/content/social";
 import type { SocialPlatform } from "@/content/types";
 import { ReduceMotionToggle } from "@/components/ui/ReduceMotionToggle";
+import { Reveal } from "@/components/ui/Reveal";
 import { VerifyMarker } from "@/components/ui/VerifyMarker";
 import { AnimatedBackground } from "@/components/visuals/AnimatedBackground";
+import { runStagger } from "@/lib/motion";
 import { ICON_STROKE } from "@/lib/tokens";
 import { BackToTop } from "./BackToTop";
 import { BrandSignature } from "./BrandSignature";
@@ -74,102 +76,124 @@ export function Footer() {
       ) : null}
       <div className="container-page">
         <div className="grid grid-cols-1 gap-12 md:grid-cols-2 lg:grid-cols-12 lg:gap-6 xl:gap-8">
-          <div className="lg:col-span-4">
-            <Logo alt={site.name.text} size="footer" />
-            <VerifyMarker verified={site.shortDescription.verified} className="mt-5">
-              <p className="max-w-[40ch] text-body text-slate-400">{site.shortDescription.text}</p>
-            </VerifyMarker>
-            {socialLinks.length > 0 ? (
-              <ul aria-label="Social media" className="mt-6 flex gap-1">
-                {socialLinks.map((social) => {
-                  const Icon = SOCIAL_ICONS[social.platform];
-                  return (
-                    <li key={social.href}>
-                      <VerifyMarker verified={social.verified} as="span" className="block">
-                        <a
-                          href={social.href}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          aria-label={`${social.label} (opens in a new tab)`}
-                          className="flex size-11 items-center justify-center rounded-button text-slate-400 transition-colors duration-200 hover:bg-navy-900 hover:text-cloud-50"
-                        >
-                          <Icon aria-hidden="true" size={20} strokeWidth={ICON_STROKE} />
-                        </a>
-                      </VerifyMarker>
-                    </li>
-                  );
-                })}
+          <Reveal index={0} stepMs={runStagger.footerColumns} className="lg:col-span-4">
+            <div>
+              <Logo alt={site.name.text} size="footer" />
+              <VerifyMarker verified={site.shortDescription.verified} className="mt-5">
+                <p className="max-w-[40ch] text-body text-slate-400">
+                  {site.shortDescription.text}
+                </p>
+              </VerifyMarker>
+              {socialLinks.length > 0 ? (
+                <ul aria-label="Social media" className="mt-6 flex gap-1">
+                  {socialLinks.map((social) => {
+                    const Icon = SOCIAL_ICONS[social.platform];
+                    return (
+                      <li key={social.href}>
+                        <VerifyMarker verified={social.verified} as="span" className="block">
+                          <a
+                            href={social.href}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            aria-label={`${social.label} (opens in a new tab)`}
+                            className="flex size-11 items-center justify-center rounded-button text-slate-400 transition-colors duration-200 hover:bg-navy-900 hover:text-cloud-50"
+                          >
+                            <Icon aria-hidden="true" size={20} strokeWidth={ICON_STROKE} />
+                          </a>
+                        </VerifyMarker>
+                      </li>
+                    );
+                  })}
+                </ul>
+              ) : null}
+            </div>
+          </Reveal>
+
+          <Reveal
+            index={1}
+            stepMs={runStagger.footerColumns}
+            className="lg:col-span-2 lg:col-start-6"
+          >
+            <nav aria-labelledby="footer-company">
+              <h2
+                id="footer-company"
+                className="font-mono text-small tracking-[0.14em] text-cloud-50 uppercase"
+              >
+                Company
+              </h2>
+              <ul className="mt-4 flex flex-col">
+                {footerCompanyLinks.map((link) => (
+                  <li key={link.href}>
+                    <a href={link.href} className={linkClass}>
+                      {link.label}
+                      <span aria-hidden="true" className={underline} />
+                    </a>
+                  </li>
+                ))}
               </ul>
-            ) : null}
-          </div>
+            </nav>
+          </Reveal>
 
-          <nav aria-labelledby="footer-company" className="lg:col-span-2 lg:col-start-6">
-            <h2
-              id="footer-company"
-              className="font-mono text-small tracking-[0.14em] text-cloud-50 uppercase"
-            >
-              Company
-            </h2>
-            <ul className="mt-4 flex flex-col">
-              {footerCompanyLinks.map((link) => (
-                <li key={link.href}>
-                  <a href={link.href} className={linkClass}>
-                    {link.label}
-                    <span aria-hidden="true" className={underline} />
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </nav>
-
-          <nav aria-labelledby="footer-products" className="lg:col-span-2 lg:col-start-8">
-            <h2
-              id="footer-products"
-              className="font-mono text-small tracking-[0.14em] text-cloud-50 uppercase"
-            >
-              Products
-            </h2>
-            <ul className="mt-4 flex flex-col">
-              {products.map((product) => (
-                <li key={product.id}>
-                  <a
-                    href={product.externalHref}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className={linkClass}
-                  >
-                    {/* Issue 34: the icon stays inline after the last word (no-wrap group with a
+          <Reveal
+            index={2}
+            stepMs={runStagger.footerColumns}
+            className="lg:col-span-2 lg:col-start-8"
+          >
+            <nav aria-labelledby="footer-products">
+              <h2
+                id="footer-products"
+                className="font-mono text-small tracking-[0.14em] text-cloud-50 uppercase"
+              >
+                Products
+              </h2>
+              <ul className="mt-4 flex flex-col">
+                {products.map((product) => (
+                  <li key={product.id}>
+                    <a
+                      href={product.externalHref}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={linkClass}
+                    >
+                      {/* Issue 34: the icon stays inline after the last word (no-wrap group with a
                         non-breaking space), so it never drifts to the far right. */}
-                    <span>
-                      <InlineIconText text={product.name} />
-                    </span>{" "}
-                    <span className="sr-only">(opens in a new tab)</span>
+                      <span>
+                        <InlineIconText text={product.name} />
+                      </span>{" "}
+                      <span className="sr-only">(opens in a new tab)</span>
+                      <span aria-hidden="true" className={underline} />
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </nav>
+          </Reveal>
+
+          <Reveal
+            index={3}
+            stepMs={runStagger.footerColumns}
+            className="lg:col-span-3 lg:col-start-10"
+          >
+            <div>
+              <h2 className="font-mono text-small tracking-[0.14em] text-cloud-50 uppercase">
+                Contact
+              </h2>
+              <VerifyMarker verified={contact.verified} className="mt-4">
+                <address className="flex flex-col not-italic">
+                  <a href={`mailto:${contact.email}`} className={`${linkClass} break-all`}>
+                    {contact.email}
                     <span aria-hidden="true" className={underline} />
                   </a>
-                </li>
-              ))}
-            </ul>
-          </nav>
-
-          <div className="lg:col-span-3 lg:col-start-10">
-            <h2 className="font-mono text-small tracking-[0.14em] text-cloud-50 uppercase">
-              Contact
-            </h2>
-            <VerifyMarker verified={contact.verified} className="mt-4">
-              <address className="flex flex-col not-italic">
-                <a href={`mailto:${contact.email}`} className={`${linkClass} break-all`}>
-                  {contact.email}
-                  <span aria-hidden="true" className={underline} />
-                </a>
-                <a href={`tel:${contact.phone}`} className={linkClass}>
-                  {contact.phoneDisplay}
-                  <span aria-hidden="true" className={underline} />
-                </a>
-                <p className="mt-2 text-body text-slate-400">{contact.address}</p>
-                <p className="mt-1 text-small text-slate-400">{contact.hours}</p>
-              </address>
-            </VerifyMarker>
-          </div>
+                  <a href={`tel:${contact.phone}`} className={linkClass}>
+                    {contact.phoneDisplay}
+                    <span aria-hidden="true" className={underline} />
+                  </a>
+                  <p className="mt-2 text-body text-slate-400">{contact.address}</p>
+                  <p className="mt-1 text-small text-slate-400">{contact.hours}</p>
+                </address>
+              </VerifyMarker>
+            </div>
+          </Reveal>
         </div>
 
         <div className="mt-20 md:mt-24">

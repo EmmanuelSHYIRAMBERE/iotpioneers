@@ -288,7 +288,7 @@ export function IoTDashboardPreview({
     <Region
       region="chart"
       focus={focus}
-      className="flex min-h-0 flex-col rounded-card bg-navy-900 p-3 shadow-highlight lg:p-4"
+      className="flex min-h-0 min-w-0 flex-col rounded-card bg-navy-900 p-3 shadow-highlight lg:p-4"
     >
       <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
         <SegmentedControl
@@ -321,7 +321,7 @@ export function IoTDashboardPreview({
     <Region
       region="devices"
       focus={focus}
-      className="flex min-h-0 flex-col rounded-card bg-navy-900 p-2 shadow-highlight lg:p-3"
+      className="flex min-h-0 min-w-0 flex-col rounded-card bg-navy-900 p-2 shadow-highlight lg:p-3"
     >
       <p className="mb-1 px-2 font-mono text-small text-slate-400">Devices</p>
       {/* Below xl the frame grows with its content and the list shows at least three devices
@@ -333,7 +333,11 @@ export function IoTDashboardPreview({
   );
 
   const alertsPanel = (
-    <Region region="alerts" focus={focus} className="rounded-card bg-navy-900 p-3 shadow-highlight">
+    <Region
+      region="alerts"
+      focus={focus}
+      className="min-w-0 rounded-card bg-navy-900 p-3 shadow-highlight"
+    >
       {/* One alert in the compact layouts so the device list keeps its height; the wider
           frame (2xl) has room for both. */}
       <AlertFeed
@@ -381,9 +385,9 @@ export function IoTDashboardPreview({
           {cards}
           {/* xl: chart beside devices and alerts inside the 16:10 frame. Below xl: chart full width,
               then devices and alerts side by side at their natural height. */}
-          <div className="grid gap-3 xl:min-h-0 xl:flex-1 xl:grid-cols-[minmax(0,1.45fr)_minmax(0,1fr)]">
+          <div className="grid min-w-0 gap-3 xl:min-h-0 xl:flex-1 xl:grid-cols-[minmax(0,1.45fr)_minmax(0,1fr)]">
             {chart}
-            <div className="grid gap-3 md:grid-cols-2 md:items-start xl:flex xl:min-h-0 xl:flex-col">
+            <div className="grid min-w-0 gap-3 md:grid-cols-2 md:items-start xl:flex xl:min-h-0 xl:flex-col xl:items-stretch">
               {devicesPanel}
               {alertsPanel}
             </div>

@@ -5,7 +5,7 @@ import { AnimatePresence, motion } from "motion/react";
 import { ArrowUpRight, Mail, Phone } from "lucide-react";
 import type { NavItem, ProductEntry } from "@/content/types";
 import { AnimatedButton } from "@/components/ui/AnimatedButton";
-import { distance, ease, s, timing } from "@/lib/motion";
+import { ease, runDistance, s, timing } from "@/lib/motion";
 import { ICON_STROKE } from "@/lib/tokens";
 
 export interface MobileNavigationProps {
@@ -84,10 +84,10 @@ export function MobileNavigation({
   }, [open, onClose, triggerRef]);
 
   const item = (index: number) => ({
-    initial: { opacity: 0, y: distance.default },
+    initial: { opacity: 0, x: runDistance.enter },
     animate: {
       opacity: 1,
-      y: 0,
+      x: 0,
       transition: {
         duration: s(timing.menuLinkIn),
         ease: ease.outExpo,

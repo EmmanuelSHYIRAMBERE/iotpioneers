@@ -3,7 +3,8 @@
 import { useRef, type KeyboardEvent } from "react";
 import { motion } from "motion/react";
 import { cn } from "@/lib/cn";
-import { spring } from "@/lib/motion";
+import { useReducedMotionPreference } from "@/hooks/useReducedMotionPreference";
+import { enterUp, runStagger, spring, staggerDelay, viewportAmount } from "@/lib/motion";
 
 export interface CategoryTab {
   id: string;
@@ -26,6 +27,7 @@ export interface CategoryTabsProps {
  */
 export function CategoryTabs({ tabs, value, onChange, panelId, idPrefix }: CategoryTabsProps) {
   const refs = useRef<(HTMLButtonElement | null)[]>([]);
+  const reduced = useReducedMotionPreference();
   const index = Math.max(
     0,
     tabs.findIndex((tab) => tab.id === value),
@@ -60,8 +62,13 @@ export function CategoryTabs({ tabs, value, onChange, panelId, idPrefix }: Categ
       {tabs.map((tab, i) => {
         const selected = tab.id === value;
         return (
-          <button
+          // Pills rise in with a 40ms stagger, once.
+          <motion.button
             key={tab.id}
+            initial={reduced ? false : "hidden"}
+            whileInView="visible"
+            viewport={{ once: true, amount: viewportAmount.reveal }}
+            variants={enterUp(false, staggerDelay(i, runStagger.shopPills))}
             ref={(node) => {
               refs.current[i] = node;
             }}
@@ -91,7 +98,7 @@ export function CategoryTabs({ tabs, value, onChange, panelId, idPrefix }: Categ
               />
             ) : null}
             {tab.label}
-          </button>
+          </motion.button>
         );
       })}
     </div>

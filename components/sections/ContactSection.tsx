@@ -14,15 +14,24 @@ import { WordReveal } from "@/components/ui/WordReveal";
 import { AnimatedBackground } from "@/components/visuals/AnimatedBackground";
 import { ParticleNetwork } from "@/components/visuals/ParticleNetwork";
 import { StaticNetwork } from "@/components/visuals/StaticNetwork";
-import { ICON_STROKE } from "@/lib/tokens";
+import { colors, hexToRgb, ICON_STROKE } from "@/lib/tokens";
+import { motion } from "motion/react";
+import { useReducedMotionPreference } from "@/hooks/useReducedMotionPreference";
+import { ease, runTiming, s, viewportAmount } from "@/lib/motion";
 
 /**
  * Section 09: "How do I start?" A centred section. The node network converges into one bright
  * node placed in the gap below the button row, never over text (audit issue 30), closing the
  * "Signal to Insight" story. No contact form (no verified endpoint).
  */
+/** Headline glow (reference-ui-patterns): brightGold at 25%, 40px blur; GLOW_OFF is its transparent start. */
+const GOLD = hexToRgb(colors.brightGold).join(" ");
+const GLOW_ON = `0 0 40px rgb(${GOLD} / 0.25)`;
+const GLOW_OFF = `0 0 40px rgb(${GOLD} / 0)`;
+
 export function ContactSection() {
   const textRef = useRef<HTMLDivElement>(null);
+  const reduced = useReducedMotionPreference();
   const focusRef = useRef<HTMLSpanElement>(null);
   const mailto = `mailto:${contact.email}?subject=${encodeURIComponent(contactSection.emailSubject)}`;
   const tel = `tel:${contact.phone}`;
@@ -43,7 +52,7 @@ export function ContactSection() {
     <section
       id="contact"
       aria-labelledby="contact-title"
-      className="surface-dark section-pad relative isolate overflow-hidden bg-navy-950 text-cloud-50"
+      className="surface-dark section-pad section-pad-joined relative isolate overflow-hidden bg-navy-950 text-cloud-50"
     >
       <AnimatedBackground variant="ctaGradient" className="-z-30" />
       {ctaImage.src ? (
@@ -70,16 +79,22 @@ export function ContactSection() {
           <div ref={textRef}>
             <VerifyMarker verified={contactSection.verified}>
               <p className="eyebrow">{contactSection.eyebrow}</p>
-              <h2
+              {/* The headline glow fades in over 1200ms once in view (static with reduced motion). */}
+              <motion.h2
                 id="contact-title"
-                className="text-glow-gold mt-4 font-display text-display-l text-cloud-50"
+                className="mt-4 font-display text-display-l text-cloud-50"
+                initial={reduced ? false : { textShadow: GLOW_OFF }}
+                whileInView={{ textShadow: GLOW_ON }}
+                viewport={{ once: true, amount: viewportAmount.headline }}
+                transition={{ duration: s(runTiming.glowFadeIn), ease: ease.standard }}
+                style={reduced ? { textShadow: GLOW_ON } : {}}
               >
                 <WordReveal
                   text={contactSection.titleLead}
                   emphasis={contactSection.titleEmphasis}
                   emphasisClassName="text-bright-gold"
                 />
-              </h2>
+              </motion.h2>
               <p className="mx-auto mt-6 max-w-[60ch] text-lead text-slate-400">
                 {contactSection.lead}
               </p>

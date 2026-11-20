@@ -7,7 +7,8 @@ import { AnimatedButton } from "@/components/ui/AnimatedButton";
 import { ScrollProgressIndicator } from "@/components/ui/ScrollProgressIndicator";
 import { useActiveSection } from "@/hooks/useActiveSection";
 import { cn } from "@/lib/cn";
-import { spring } from "@/lib/motion";
+import { ease, runDistance, runTiming, s, spring, staggerDelay } from "@/lib/motion";
+import { useReducedMotionPreference } from "@/hooks/useReducedMotionPreference";
 import { Logo } from "./Logo";
 import { MobileNavigation } from "./MobileNavigation";
 import { ProductsDropdown } from "./ProductsDropdown";
@@ -79,6 +80,23 @@ export function Navbar({
     if (returnFocus) menuButtonRef.current?.focus();
   }, []);
 
+  // Entrance (scroll-motion-choreography): logo fades in, links drop 8px with a 40ms stagger
+  // from 100ms, the CTA fades in last. Reduced motion renders everything in place.
+  const reduced = useReducedMotionPreference();
+  const enter = (index: number, drop: boolean) =>
+    reduced
+      ? { initial: false as const }
+      : {
+          initial: { opacity: 0, y: drop ? -runDistance.navLinkDrop : 0 },
+          animate: { opacity: 1, y: 0 },
+          transition: {
+            duration: s(runTiming.navLogoFade),
+            ease: ease.outExpo,
+            delay: s(runTiming.navLinksAt) + staggerDelay(index, runTiming.navLinkStagger),
+          },
+        };
+  const ctaIndex = links.length + 1;
+
   return (
     <>
       <header
@@ -101,28 +119,35 @@ export function Navbar({
             scrolled && !menuOpen ? "translate-y-2" : "translate-y-0",
           )}
         >
-          <a
+          <motion.a
             href="#top"
             className="inline-flex min-h-11 items-center rounded-button"
             aria-label={`${brandName}, back to top`}
+            {...(reduced
+              ? { initial: false as const }
+              : {
+                  initial: { opacity: 0 },
+                  animate: { opacity: 1 },
+                  transition: { duration: s(runTiming.navLogoFade), ease: ease.outExpo },
+                })}
           >
             <Logo alt="" size="nav" />
-          </a>
+          </motion.a>
 
           <nav aria-label="Main" className="hidden lg:block">
             <ul className="flex items-center gap-8">
-              {links.map((link) => {
+              {links.map((link, index) => {
                 const active = activeHref === link.href;
                 if (link.label === "Products") {
                   return (
-                    <li key={link.href} className="relative">
+                    <motion.li key={link.href} className="relative isolate" {...enter(index, true)}>
                       <ProductsDropdown label={link.label} products={products} active={active} />
                       {active ? <ActivePill /> : null}
-                    </li>
+                    </motion.li>
                   );
                 }
                 return (
-                  <li key={link.href} className="relative">
+                  <motion.li key={link.href} className="relative isolate" {...enter(index, true)}>
                     <a
                       href={link.href}
                       aria-current={active ? "location" : undefined}
@@ -134,16 +159,16 @@ export function Navbar({
                       {link.label}
                     </a>
                     {active ? <ActivePill /> : null}
-                  </li>
+                  </motion.li>
                 );
               })}
             </ul>
           </nav>
 
           <div className="flex items-center gap-3">
-            <AnimatedButton href={cta.href} className="hidden md:inline-flex">
-              {cta.label}
-            </AnimatedButton>
+            <motion.span className="hidden md:inline-flex" {...enter(ctaIndex, false)}>
+              <AnimatedButton href={cta.href}>{cta.label}</AnimatedButton>
+            </motion.span>
             <button
               ref={menuButtonRef}
               type="button"
@@ -195,7 +220,8 @@ function ActivePill() {
     <motion.span
       layoutId="nav-active-pill"
       aria-hidden="true"
-      className="absolute -bottom-1 left-1/2 -ml-2 h-0.5 w-4 rounded-full bg-bright-gold"
+      // Gold pill behind the active link: brightGold hairline and a 10% fill, text stays cloud50.
+      className="pointer-events-none absolute -inset-x-3 inset-y-1 -z-10 rounded-full border border-bright-gold/45 bg-bright-gold/10"
       transition={spring.snappy}
     />
   );

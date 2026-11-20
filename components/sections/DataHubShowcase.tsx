@@ -4,7 +4,9 @@ import type { Feature } from "@/content/types";
 import { DataHubStoryLoader } from "@/components/dashboard/DataHubStoryLoader";
 import { AnimatedButton } from "@/components/ui/AnimatedButton";
 import { FeatureList } from "@/components/ui/FeatureList";
+import { Reveal } from "@/components/ui/Reveal";
 import { SectionHeading } from "@/components/ui/SectionHeading";
+import { TiltRise } from "@/components/ui/TiltRise";
 import { VerifyMarker } from "@/components/ui/VerifyMarker";
 import { AnimatedBackground } from "@/components/visuals/AnimatedBackground";
 
@@ -30,7 +32,7 @@ export function DataHubShowcase() {
       <div className="container-page">
         {/* One left column: title, ownership line under it, lead, protocol tag and CTAs together
             (audit issue 17). */}
-        <div className="max-w-3xl">
+        <Reveal from="left" className="max-w-3xl">
           <SectionHeading
             id="iotdatahub-title"
             eyebrow={dataHub.eyebrow}
@@ -67,21 +69,23 @@ export function DataHubShowcase() {
               </ul>
             </VerifyMarker>
           </div>
-        </div>
+        </Reveal>
       </div>
 
       <div className="container-wide mt-12 md:mt-16">
-        <DataHubStoryLoader
-          steps={dataHub.steps}
-          labels={{
-            sidebar: dataHub.sidebarTerms.items,
-            badgeLabel: dataHub.demoBadge.label,
-            badgeTooltip: dataHub.demoBadge.tooltip,
-            address: new URL(dataHub.cta.href).hostname.replace(/^www\./, ""),
-          }}
-          productHref={dataHub.cta.href}
-          productLabel={dataHub.cta.label}
-        />
+        <TiltRise>
+          <DataHubStoryLoader
+            steps={dataHub.steps}
+            labels={{
+              sidebar: dataHub.sidebarTerms.items,
+              badgeLabel: dataHub.demoBadge.label,
+              badgeTooltip: dataHub.demoBadge.tooltip,
+              address: new URL(dataHub.cta.href).hostname.replace(/^www\./, ""),
+            }}
+            productHref={dataHub.cta.href}
+            productLabel={dataHub.cta.label}
+          />
+        </TiltRise>
         <p className="mt-6 text-small text-slate-400">{dataHub.demoCaption}</p>
       </div>
 

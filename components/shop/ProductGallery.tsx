@@ -20,7 +20,16 @@ import { LoadingSkeleton } from "@/components/ui/LoadingSkeleton";
 import { mediaQueries, useMediaQuery } from "@/hooks/useMediaQuery";
 import { assertNever } from "@/lib/assertNever";
 import { cn } from "@/lib/cn";
-import { ease, s, staggerDelay, timing } from "@/lib/motion";
+import { useReducedMotionPreference } from "@/hooks/useReducedMotionPreference";
+import {
+  ease,
+  runDistance,
+  runStagger,
+  s,
+  staggerDelay,
+  timing,
+  viewportAmount,
+} from "@/lib/motion";
 import { ICON_STROKE } from "@/lib/tokens";
 import { isPreviewMode } from "@/lib/verification";
 import { CategoryTabs } from "./CategoryTabs";
@@ -90,6 +99,7 @@ export function ProductGallery({ categories, products, labels, shopHref }: Produ
   const progressRef = useRef<HTMLDivElement>(null);
   const [edges, setEdges] = useState({ start: true, end: false });
   const finePointer = useMediaQuery(mediaQueries.finePointer);
+  const reduced = useReducedMotionPreference();
   const drag = useRef({ active: false, moved: false, startX: 0, startScroll: 0 });
   const [dragging, setDragging] = useState(false);
 
@@ -250,12 +260,14 @@ export function ProductGallery({ categories, products, labels, shopHref }: Produ
             <motion.li
               key={product.id}
               className="w-[72vw] shrink-0 snap-start sm:w-[280px]"
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
+              // Cards slide in from the right with an 80ms stagger, once each (no autoplay).
+              initial={reduced ? false : { opacity: 0, x: runDistance.enter }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true, amount: viewportAmount.cards }}
               transition={{
                 duration: s(timing.shopIn),
                 ease: ease.outExpo,
-                delay: staggerDelay(index, timing.shopStagger),
+                delay: staggerDelay(index, runStagger.shopCards),
               }}
             >
               <ProductCard

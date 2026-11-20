@@ -267,6 +267,8 @@ export const globe = {
   /** Frame rate caps. */
   fpsDesktop: 60,
   fpsLow: 30,
+  /** Average draw cost (ms) above which the globe drops to fpsLow for the session. */
+  drawBudgetMs: 6,
   /** Device pixel ratio cap. */
   maxDpr: 2,
   /** Rendered diameter (px). */

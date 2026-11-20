@@ -6,6 +6,7 @@ import { SectionHeading } from "@/components/ui/SectionHeading";
 import { TiltCard } from "@/components/ui/TiltCard";
 import { VerifyMarker } from "@/components/ui/VerifyMarker";
 import { ICON_STROKE } from "@/lib/tokens";
+import { DrawnCheck, PathRow } from "./PathTableMotion";
 
 const linkClass =
   "group inline-flex min-h-11 items-center gap-1.5 font-medium text-deep-gold underline-offset-4 hover:underline";
@@ -31,10 +32,10 @@ function OfferingLink({ offering }: { offering: PathOffering }) {
   );
 }
 
-function YesMark() {
+function YesMark({ rowIndex }: { rowIndex: number }) {
   return (
     <>
-      <Check aria-hidden="true" size={22} strokeWidth={2} className="mx-auto text-deep-gold" />
+      <DrawnCheck rowIndex={rowIndex} />
       <span className="sr-only">Yes</span>
     </>
   );
@@ -51,21 +52,23 @@ export function PathTableSection() {
     <section
       id="paths"
       aria-labelledby="paths-title"
-      className="surface-light section-pad section-pad-joined border-t border-slate-200 bg-cloud-50 text-navy-950"
+      className="surface-light section-pad section-pad-joined border-t border-slate-200 bg-cloud-50 text-navy-950 lg:pb-16"
     >
       <div className="container-page">
-        <VerifyMarker verified={pathHeading.verified} className="max-w-3xl">
-          <SectionHeading
-            id="paths-title"
-            eyebrow={pathHeading.eyebrow}
-            title={pathHeading.title}
-            lead={pathHeading.lead}
-            tone="onLight"
-          />
-        </VerifyMarker>
+        <Reveal>
+          <VerifyMarker verified={pathHeading.verified} className="max-w-3xl">
+            <SectionHeading
+              id="paths-title"
+              eyebrow={pathHeading.eyebrow}
+              title={pathHeading.title}
+              lead={pathHeading.lead}
+              tone="onLight"
+            />
+          </VerifyMarker>
+        </Reveal>
 
         {/* md and up: semantic table. */}
-        <Reveal className="mt-12 hidden md:block">
+        <div className="mt-12 hidden md:block">
           <div className="overflow-hidden rounded-card border border-slate-200 bg-white shadow-rest">
             <table className="w-full table-fixed border-collapse text-left">
               <caption className="sr-only">{pathHeading.caption}</caption>
@@ -91,33 +94,33 @@ export function PathTableSection() {
                 </tr>
               </thead>
               <tbody>
-                {pathNeeds.map((need) => (
-                  <tr key={need.id} className="border-b border-slate-200">
+                {pathNeeds.map((need, rowIndex) => (
+                  <PathRow key={need.id} index={rowIndex} className="border-b border-slate-200">
                     <th scope="row" className="px-6 py-5 text-body font-medium text-navy-950">
                       {need.label}
                     </th>
                     {pathOfferings.map((offering) => (
                       <td key={offering.id} className="px-4 py-5 text-center">
                         {offering.serves.includes(need.id) ? (
-                          <YesMark />
+                          <YesMark rowIndex={rowIndex} />
                         ) : (
                           <span className="sr-only">No</span>
                         )}
                       </td>
                     ))}
-                  </tr>
+                  </PathRow>
                 ))}
               </tbody>
               <tfoot>
                 <tr>
                   <th
                     scope="row"
-                    className="px-6 py-4 font-mono text-small font-medium tracking-[0.1em] text-slate-600 uppercase"
+                    className="px-6 pt-4 pb-3 font-mono text-small font-medium tracking-[0.1em] text-slate-600 uppercase"
                   >
                     {pathHeading.ctaRowLabel}
                   </th>
                   {pathOfferings.map((offering) => (
-                    <td key={offering.id} className="px-4 py-4 text-center">
+                    <td key={offering.id} className="px-4 pt-4 pb-3 text-center">
                       <OfferingLink offering={offering} />
                     </td>
                   ))}
@@ -125,7 +128,7 @@ export function PathTableSection() {
               </tfoot>
             </table>
           </div>
-        </Reveal>
+        </div>
 
         {/* Below md: one card per offering, listing the needs it serves. */}
         <ul className="mt-10 grid grid-cols-1 gap-4 md:hidden" aria-label={pathHeading.caption}>

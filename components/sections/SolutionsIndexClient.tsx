@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, type KeyboardEvent } from "react";
 import Image from "next/image";
-import { AnimatePresence, motion } from "motion/react";
+import { AnimatePresence, motion, useScroll, useTransform } from "motion/react";
 import { ArrowRight, Minus, Plus } from "lucide-react";
 import { solutionImages } from "@/content/images";
 import type { Solution } from "@/content/types";
@@ -12,7 +12,18 @@ import { useInView } from "@/hooks/useInView";
 import { mediaQueries, useMediaQuery } from "@/hooks/useMediaQuery";
 import { useReducedMotionPreference } from "@/hooks/useReducedMotionPreference";
 import { cn } from "@/lib/cn";
-import { distance, ease, s, timing } from "@/lib/motion";
+import {
+  ease,
+  enterLeft,
+  enterRight,
+  runDistance,
+  runStagger,
+  runTiming,
+  s,
+  staggerDelay,
+  timing,
+  viewportAmount,
+} from "@/lib/motion";
 import { ICON_STROKE } from "@/lib/tokens";
 
 export interface SolutionsIndexClientProps {
@@ -34,6 +45,16 @@ export function SolutionsIndexClient({ solutions }: SolutionsIndexClientProps) {
   const desktop = useMediaQuery(mediaQueries.lg);
   const reduced = useReducedMotionPreference();
   const panelInView = useInView(panelRef);
+  const columnRef = useRef<HTMLDivElement>(null);
+  // The stand-in photo behind the drawing drifts 30px with scroll (not with reduced motion). The
+  // scroll target is the always-rendered grid: the panel itself only exists at lg and up.
+  const { scrollYProgress } = useScroll({ target: columnRef, offset: ["start end", "end start"] });
+  const photoY = useTransform(
+    scrollYProgress,
+    [0, 1],
+    [runDistance.parallaxSmall, -runDistance.parallaxSmall],
+  );
+  const start = reduced ? false : "hidden";
 
   useEffect(
     () => () => {
@@ -58,16 +79,21 @@ export function SolutionsIndexClient({ solutions }: SolutionsIndexClientProps) {
   };
 
   return (
-    <div className="grid-page gap-y-12">
+    <div ref={columnRef} className="grid-page gap-y-12">
       <ul className="col-span-full border-t border-slate-200 lg:col-span-6">
         {solutions.map((solution, index) => {
           const open = solution.id === openId;
           const headerId = `solution-${solution.id}-header`;
           const panelId = `solution-${solution.id}-panel`;
           return (
-            <li
+            // Rows enter from the left with a 60ms stagger.
+            <motion.li
               key={solution.id}
               className="relative border-b border-slate-200"
+              initial={start}
+              whileInView="visible"
+              viewport={{ once: true, amount: viewportAmount.reveal }}
+              variants={enterLeft(!desktop, staggerDelay(index, runStagger.solutionRows))}
               onMouseEnter={() => {
                 if (!desktop) return;
                 window.clearTimeout(hoverTimer.current);
@@ -183,41 +209,53 @@ export function SolutionsIndexClient({ solutions }: SolutionsIndexClientProps) {
                   ) : null}
                 </AnimatePresence>
               </VerifyMarker>
-            </li>
+            </motion.li>
           );
         })}
       </ul>
 
       {desktop && shown ? (
-        <div className="hidden lg:col-span-5 lg:col-start-8 lg:block">
+        // The illustration panel sits in the right column, so it enters from the right.
+        <motion.div
+          className="hidden lg:col-span-5 lg:col-start-8 lg:block"
+          initial={start}
+          whileInView="visible"
+          viewport={{ once: true, amount: viewportAmount.reveal }}
+          variants={enterRight(false)}
+        >
           <div
             ref={panelRef}
             className="bg-dot-grid sticky top-[120px] aspect-[4/3] overflow-hidden rounded-card border border-slate-200 bg-cloud-50 px-6 pt-12 pb-6"
           >
             {/* Stand-in photo behind the drawing at 15% opacity (decorative, imagery-stand-ins). */}
             {solutionImages[shown.id]?.src ? (
-              <Image
-                key={`photo-${shown.id}`}
-                src={solutionImages[shown.id]?.src ?? ""}
-                alt=""
-                fill
-                sizes="(min-width: 1280px) 520px, 40vw"
-                className="pointer-events-none object-cover opacity-15"
-              />
+              <motion.div
+                aria-hidden="true"
+                className="pointer-events-none absolute inset-x-0 -inset-y-8"
+                style={reduced ? {} : { y: photoY }}
+              >
+                <Image
+                  key={`photo-${shown.id}`}
+                  src={solutionImages[shown.id]?.src ?? ""}
+                  alt=""
+                  fill
+                  sizes="(min-width: 1280px) 520px, 40vw"
+                  className="object-cover opacity-15"
+                />
+              </motion.div>
             ) : null}
             <p className="absolute top-5 left-6 z-10 rounded-tag bg-cloud-50 px-1 font-mono text-small text-slate-600">
               FIG. {shown.index} · {shown.title.toUpperCase()}
             </p>
-            <AnimatePresence mode="wait" initial={false}>
+            {/* Selection crossfades the illustration over 300ms (both drawings overlap briefly). */}
+            <AnimatePresence initial={false}>
               <motion.div
                 key={shown.id}
-                className="relative h-full w-full"
-                initial={{ opacity: 1 }}
-                exit={{
-                  opacity: 0,
-                  y: distance.small,
-                  transition: { duration: s(timing.illustrationOut), ease: ease.in },
-                }}
+                className="absolute inset-x-6 top-12 bottom-6"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: s(runTiming.illustrationCrossfade), ease: ease.standard }}
               >
                 <SolutionIllustration
                   kind={shown.illustration}
@@ -227,7 +265,7 @@ export function SolutionsIndexClient({ solutions }: SolutionsIndexClientProps) {
               </motion.div>
             </AnimatePresence>
           </div>
-        </div>
+        </motion.div>
       ) : null}
     </div>
   );

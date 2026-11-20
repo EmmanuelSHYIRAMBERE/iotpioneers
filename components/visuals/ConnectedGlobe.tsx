@@ -160,7 +160,10 @@ export default function ConnectedGlobe({ compact, className }: ConnectedGlobePro
 
     const lowPower =
       compact || (typeof navigator !== "undefined" && (navigator.hardwareConcurrency || 8) <= 4);
-    const minInterval = 1000 / (lowPower ? globe.fpsLow : globe.fpsDesktop);
+    // Adaptive frame rate: start at 60fps (30 on phones and 4 or fewer cores) and drop to 30 for
+    // the rest of the session if the average draw cost over 60 frames exceeds the budget, so a
+    // slow device spends at most half its frames on the globe.
+    let minInterval = 1000 / (lowPower ? globe.fpsLow : globe.fpsDesktop);
     let last = performance.now();
     let stats = { frames: 0, total: 0, max: 0 };
 
@@ -191,7 +194,12 @@ export default function ConnectedGlobe({ compact, className }: ConnectedGlobePro
       stats.total += cost;
       stats.max = Math.max(stats.max, cost);
       if (stats.frames >= 60) {
-        wrapper.dataset.frameAvgMs = (stats.total / stats.frames).toFixed(2);
+        const average = stats.total / stats.frames;
+        if (average > globe.drawBudgetMs) {
+          minInterval = 1000 / globe.fpsLow;
+          wrapper.dataset.globeFps = String(globe.fpsLow);
+        }
+        wrapper.dataset.frameAvgMs = average.toFixed(2);
         wrapper.dataset.frameMaxMs = stats.max.toFixed(2);
         stats = { frames: 0, total: 0, max: 0 };
       }

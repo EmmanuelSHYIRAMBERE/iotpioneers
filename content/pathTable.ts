@@ -54,7 +54,7 @@ export const pathOfferings: readonly PathOffering[] = [
     name: "IoT Pioneers Shop",
     serves: ["parts"],
     ctaLabel: "Visit the Shop",
-    ctaAccessibleName: "Visit the IoT Pioneers Shop",
+    ctaAccessibleName: "Visit the Shop: IoT Pioneers Shop",
     href: PRODUCT_URLS.shop,
     external: true,
     verified: false,

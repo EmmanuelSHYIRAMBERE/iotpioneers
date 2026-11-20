@@ -8,7 +8,15 @@ import { MediaPlaceholder } from "@/components/ui/MediaPlaceholder";
 import { VerifyMarker } from "@/components/ui/VerifyMarker";
 import { mediaQueries, useMediaQuery } from "@/hooks/useMediaQuery";
 import { useReducedMotionPreference } from "@/hooks/useReducedMotionPreference";
-import { ease, s, timing, viewportAmount } from "@/lib/motion";
+import {
+  clipFromRight,
+  clipScaleInner,
+  enterUp,
+  runDistance,
+  s,
+  timing,
+  viewportAmount,
+} from "@/lib/motion";
 
 export interface IntroImagesProps {
   large: EditorialImage;
@@ -53,9 +61,11 @@ export function IntroImages({ large, small, annotation, annotationVerified }: In
   const reduced = useReducedMotionPreference();
   const parallax = desktop && !reduced;
   const { scrollYProgress } = useScroll({ target: ref, offset: ["start end", "end start"] });
-  const largeY = useTransform(scrollYProgress, [0, 1], [0, -40]);
-  const smallY = useTransform(scrollYProgress, [0, 1], [0, -80]);
-  const revealDuration = s(desktop ? timing.clipReveal : timing.clipRevealMobile);
+  // Parallax 40px on the panel and 80px on the small photo (md and up).
+  const largeY = useTransform(scrollYProgress, [0, 1], [0, -runDistance.parallaxMedium]);
+  const smallY = useTransform(scrollYProgress, [0, 1], [0, -runDistance.parallaxLarge]);
+  // Reduced motion renders the finished state: no clip, no scale, no rise.
+  const start = reduced ? false : "hidden";
 
   return (
     <div ref={ref} className="relative pb-12 md:pb-16">
@@ -64,7 +74,7 @@ export function IntroImages({ large, small, annotation, annotationVerified }: In
       <motion.div
         style={parallax ? { y: largeY } : {}}
         className="relative ml-auto w-[82%] md:w-[70%] lg:w-[84%]"
-        initial="hidden"
+        initial={start}
         whileInView="visible"
         viewport={{ once: true, amount: viewportAmount.reveal }}
       >
@@ -74,13 +84,8 @@ export function IntroImages({ large, small, annotation, annotationVerified }: In
           <motion.div
             data-reveal=""
             className="relative overflow-hidden rounded-frame bg-navy-900 shadow-hover"
-            variants={{
-              hidden: { clipPath: "inset(100% 0% 0% 0%)" },
-              visible: {
-                clipPath: "inset(0% 0% 0% 0%)",
-                transition: { duration: revealDuration, ease: ease.outExpo },
-              },
-            }}
+            // The panel sits in the right column, so it clips in from the right.
+            variants={clipFromRight(!desktop)}
           >
             <div aria-hidden="true" className="flex h-9 items-center gap-2 px-4">
               <span className="size-2 rounded-full bg-slate-400/50" />
@@ -89,16 +94,7 @@ export function IntroImages({ large, small, annotation, annotationVerified }: In
             </div>
             <div aria-hidden="true" className="h-0.5 bg-pioneer-gold" />
             <div className="relative aspect-[4/5] overflow-hidden">
-              <motion.div
-                className="h-full w-full"
-                variants={{
-                  hidden: { scale: desktop ? 1.12 : 1 },
-                  visible: {
-                    scale: 1,
-                    transition: { duration: revealDuration, ease: ease.outExpo },
-                  },
-                }}
-              >
+              <motion.div className="h-full w-full" variants={clipScaleInner(!desktop)}>
                 <Picture
                   image={large}
                   variant="bench"
@@ -113,7 +109,7 @@ export function IntroImages({ large, small, annotation, annotationVerified }: In
       <motion.div
         style={parallax ? { y: smallY } : {}}
         className="absolute bottom-0 left-0 w-[58%] translate-y-8 md:w-[46%] md:translate-y-12 lg:w-[52%]"
-        initial="hidden"
+        initial={start}
         whileInView="visible"
         viewport={{ once: true, amount: viewportAmount.reveal }}
       >
@@ -121,17 +117,8 @@ export function IntroImages({ large, small, annotation, annotationVerified }: In
           <motion.div
             data-reveal=""
             className="aspect-[3/2] overflow-hidden rounded-card border-4 border-cloud-50"
-            variants={{
-              hidden: { clipPath: "inset(0% 100% 0% 0%)" },
-              visible: {
-                clipPath: "inset(0% 0% 0% 0%)",
-                transition: {
-                  duration: revealDuration,
-                  ease: ease.outExpo,
-                  delay: s(timing.secondImageDelay),
-                },
-              },
-            }}
+            // The small photo rises from below, 200ms after the panel.
+            variants={enterUp(!desktop, s(timing.secondImageDelay))}
           >
             <Picture image={small} variant="board" sizes="(min-width: 1024px) 25vw, 58vw" />
           </motion.div>
