@@ -30,7 +30,16 @@ test.describe("page", () => {
     const ids = await page
       .locator("main > section[id], main > div > section[id]")
       .evaluateAll((nodes) => nodes.map((n) => n.id));
-    expect(ids).toEqual(["top", "about", "solutions", "iotdatahub", "shop", "why", "contact"]);
+    expect(ids).toEqual([
+      "top",
+      "about",
+      "solutions",
+      "iotdatahub",
+      "shop",
+      "paths",
+      "why",
+      "contact",
+    ]);
   });
 
   test("external product links open the fixed URLs in a new tab", async ({ page }) => {
@@ -66,7 +75,8 @@ test.describe("page", () => {
       timeout: 20_000,
     });
     await expect(
-      page.getByText("Dashboard shown with simulated data for illustration.", { exact: true }),
+      // One caption under the frame (audit issue 22 merged the two disclaimers into it).
+      page.getByText("Dashboard shown with simulated data for illustration."),
     ).toBeVisible();
   });
 });
@@ -144,7 +154,11 @@ test.describe("motion", () => {
     const context = await browser.newContext({ reducedMotion: "reduce" });
     const page = await context.newPage();
     await page.goto("/");
-    await expect(page.getByRole("button", { name: "Pause animation" })).toHaveCount(0);
+    // The preference is read on hydration, which Firefox and WebKit reach later on slow machines
+    // (decision log 25); before it, no animation runs, so nothing moves in the meantime.
+    await expect(page.getByRole("button", { name: "Pause animation" })).toHaveCount(0, {
+      timeout: 20_000,
+    });
     await expect(page.getByRole("list", { name: "Areas of expertise" })).toHaveCount(1);
     await context.close();
   });
@@ -313,7 +327,16 @@ test.describe("design audit batch 1 follow-ups", () => {
     }
     await page.waitForTimeout(800);
     const gaps = await page.evaluate(() => {
-      const order = ["#about", "#solutions", "#iotdatahub", "#shop", "#why", "#contact", "footer"];
+      const order = [
+        "#about",
+        "#solutions",
+        "#iotdatahub",
+        "#shop",
+        "#paths",
+        "#why",
+        "#contact",
+        "footer",
+      ];
       const MEDIA = new Set(["IMG", "SVG", "CANVAS", "VIDEO", "INPUT", "BUTTON"]);
       const contentRects = (root: Element): DOMRect[] => {
         const rects: DOMRect[] = [];
@@ -348,7 +371,7 @@ test.describe("design audit batch 1 follow-ups", () => {
       body: JSON.stringify(gaps, null, 2),
       contentType: "application/json",
     });
-    expect(gaps.length).toBe(6);
+    expect(gaps.length).toBe(7);
     for (const { join, gap } of gaps) expect(gap, join).toBeLessThanOrEqual(210);
     await context.close();
   });
@@ -393,10 +416,10 @@ test.describe("design audit batch 1 follow-ups", () => {
     expect(early.alerts).toBeGreaterThan(0);
 
     // Once a step is current, every other step's text still meets 4.5:1 on navy, with no opacity dimming.
-    await expect(page.locator('#iotdatahub ol li[aria-current="step"]')).toHaveCount(1, {
+    await expect(page.locator('#iotdatahub-demo ol li[aria-current="step"]')).toHaveCount(1, {
       timeout: 10_000,
     });
-    const failures = await page.locator("#iotdatahub ol li").evaluateAll((items) => {
+    const failures = await page.locator("#iotdatahub-demo ol li").evaluateAll((items) => {
       const lum = (rgb: number[]): number => {
         const [r = 0, g = 0, b = 0] = rgb.map((v) => {
           const c = v / 255;
@@ -421,5 +444,173 @@ test.describe("design audit batch 1 follow-ups", () => {
       return bad;
     });
     expect(failures).toEqual([]);
+  });
+});
+
+test.describe("completion run", () => {
+  test("the hero globe runs, then pauses when scrolled off screen", async ({ page, isMobile }) => {
+    test.skip(isMobile, "Desktop layout");
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto("/");
+    const globeHost = page.locator("[data-globe-state]").first();
+    await expect(globeHost).toHaveAttribute("data-globe-state", "running", { timeout: 20_000 });
+    await page.evaluate(() => {
+      window.scrollTo(0, document.documentElement.scrollHeight / 2);
+    });
+    await expect(globeHost).toHaveAttribute("data-globe-state", "paused", { timeout: 10_000 });
+  });
+
+  test("reduced motion: the globe is a static frame and the hero is finished", async ({
+    browser,
+  }, testInfo) => {
+    const context = await browser.newContext({
+      reducedMotion: "reduce",
+      viewport: { width: 1440, height: 900 },
+    });
+    const page = await context.newPage();
+    await page.goto("/");
+    await expect(page.locator("[data-globe-state]").first()).toHaveAttribute(
+      "data-globe-state",
+      "static",
+      {
+        timeout: 20_000,
+      },
+    );
+    await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+    await testInfo.attach("hero-reduced-motion-globe-1440", {
+      body: await page.screenshot(),
+      contentType: "image/png",
+    });
+    await context.close();
+  });
+
+  test("shop pill filters work with the keyboard", async ({ page }) => {
+    await page.goto("/#shop");
+    const tabs = page.getByRole("tablist").first();
+    const first = tabs.getByRole("tab").first();
+    await first.focus();
+    await expect(first).toHaveAttribute("aria-selected", "true");
+    await page.keyboard.press("ArrowRight");
+    const second = tabs.getByRole("tab").nth(1);
+    await expect(second).toBeFocused();
+    await page.keyboard.press("Enter");
+    await expect(second).toHaveAttribute("aria-selected", "true");
+    await page.keyboard.press("End");
+    await expect(tabs.getByRole("tab").last()).toBeFocused();
+    await page.keyboard.press("Home");
+    await expect(first).toBeFocused();
+  });
+
+  test("every link has an accessible name, and none is a bare generic phrase", async ({ page }) => {
+    await page.goto("/");
+    const generic = /^(learn more|read more|click here|more|here|view in shop)$/i;
+    // Names are read in one pass: aria-label, then aria-labelledby, then text content (which, unlike
+    // innerText, includes visually hidden text such as the skip link's).
+    const found = await page.getByRole("link").evaluateAll((nodes) =>
+      nodes
+        .filter((node) => node.getClientRects().length > 0)
+        .map((node) => {
+          const labelledBy = node.getAttribute("aria-labelledby");
+          const fromIds = labelledBy
+            ? labelledBy
+                .split(/\s+/)
+                .map((id) => document.getElementById(id)?.textContent ?? "")
+                .join(" ")
+            : "";
+          const name = node.getAttribute("aria-label") ?? (fromIds || (node.textContent ?? ""));
+          return { name: name.replace(/\s+/g, " ").trim(), href: node.getAttribute("href") ?? "" };
+        }),
+    );
+    expect(found.length).toBeGreaterThan(10);
+    const problems: string[] = [];
+    for (const { name, href } of found) {
+      if (name === "") problems.push(`empty name: ${href}`);
+      else if (generic.test(name)) problems.push(`generic name "${name}": ${href}`);
+    }
+    expect(problems).toEqual([]);
+  });
+
+  test("Which do you need? is a semantic table on desktop", async ({ page, isMobile }) => {
+    test.skip(isMobile, "Desktop layout");
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto("/#paths");
+    const table = page.locator("#paths table");
+    await expect(table).toBeVisible();
+    await expect(table.locator("caption")).toHaveCount(1);
+    await expect(table.locator('thead th[scope="col"]')).toHaveCount(4);
+    await expect(table.locator('tbody th[scope="row"]')).toHaveCount(3);
+    // Every cell states Yes or No for assistive technology.
+    const cells = await table.locator("tbody td").allInnerTexts();
+    expect(cells.length).toBe(9);
+    // No crosses, ratings or competitor names.
+    await expect(table).not.toContainText(/✕|×|\$|rating/i);
+  });
+
+  test("Which do you need? becomes stacked cards on mobile", async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto("/#paths");
+    await expect(page.locator("#paths table")).toBeHidden();
+    const cards = page
+      .getByRole("list", { name: "Which IoT Pioneers offering fits each need" })
+      .locator(":scope > li");
+    await expect(cards).toHaveCount(3);
+    await expect(cards.first()).toBeVisible();
+  });
+
+  test("CTA: no network decoration sits over the text", async ({ page, isMobile }) => {
+    test.skip(isMobile, "Desktop layout");
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto("/#contact");
+    const point = page.locator("#contact [data-converge-point]");
+    await expect(point).toHaveCount(1);
+    const overlaps = await page.evaluate(() => {
+      const section = document.querySelector("#contact");
+      const target = section?.querySelector("[data-converge-point]");
+      if (!section || !target) return ["missing"];
+      const p = target.getBoundingClientRect();
+      const out: string[] = [];
+      section.querySelectorAll("h2, p, a, button").forEach((el) => {
+        const r = el.getBoundingClientRect();
+        if (r.width === 0 || r.height === 0) return;
+        const intersects =
+          p.left < r.right && p.right > r.left && p.top < r.bottom && p.bottom > r.top;
+        if (intersects) out.push(`${el.tagName} ${(el.textContent ?? "").slice(0, 30)}`);
+      });
+      return out;
+    });
+    expect(overlaps).toEqual([]);
+  });
+
+  test("the marquee has two rows moving in opposite directions", async ({ page }) => {
+    await page.goto("/");
+    await expect(page.locator('[data-marquee-row="left"]')).toHaveCount(1);
+    await expect(page.locator('[data-marquee-row="right"]')).toHaveCount(1);
+  });
+
+  test("nothing above the pinned IoTDataHub story has a transform or perspective", async ({
+    page,
+    isMobile,
+  }) => {
+    test.skip(isMobile, "Desktop layout");
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto("/#iotdatahub");
+    await expect(
+      page.getByRole("group", { name: "IoTDataHub demo dashboard with simulated data" }),
+    ).toBeVisible({ timeout: 20_000 });
+    // Let the dashboard entrance (TiltRise) settle.
+    await page.waitForTimeout(2500);
+    const offenders = await page.evaluate(() => {
+      const out: string[] = [];
+      let node = document.getElementById("iotdatahub-demo")?.parentElement ?? null;
+      while (node) {
+        const style = getComputedStyle(node);
+        if (style.transform !== "none" || style.perspective !== "none")
+          out.push(`${node.tagName} ${style.transform} ${style.perspective}`);
+        node = node.parentElement;
+      }
+      return out;
+    });
+    // A transform or perspective here would become the containing block for the GSAP pin.
+    expect(offenders).toEqual([]);
   });
 });
