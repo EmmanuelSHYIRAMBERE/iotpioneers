@@ -5,6 +5,7 @@ import { contact } from "@/content/contact";
 import { site } from "@/content/site";
 import { socialLinks } from "@/content/social";
 import { SkipLink } from "@/components/layout/SkipLink";
+import { AnchorHighlight } from "@/components/ui/AnchorHighlight";
 import { MotionProvider } from "@/components/ui/MotionProvider";
 import { PreviewBanner } from "@/components/ui/PreviewBanner";
 import { contentModules } from "@/lib/contentRegistry";
@@ -112,6 +113,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       <body>
         <SkipLink />
         <MotionProvider>{children}</MotionProvider>
+        <AnchorHighlight />
         {preview ? <PreviewBanner unverifiedCount={unverifiedCount} /> : null}
       </body>
     </html>

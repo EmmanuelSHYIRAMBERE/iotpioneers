@@ -12,7 +12,7 @@ import {
 } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { ArrowLeft, ArrowRight, RotateCcw } from "lucide-react";
-import type { AsyncState, ProductIllustrationKey, ProductImage } from "@/content/types";
+import type { AsyncState, ProductIllustrationKey, ProductImage, StockImage } from "@/content/types";
 import { AnimatedButton } from "@/components/ui/AnimatedButton";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ErrorState } from "@/components/ui/ErrorState";
@@ -33,7 +33,12 @@ export interface GalleryCategory {
 
 export interface GalleryProduct {
   id: string;
+  /** Full shop title (accessible name). */
   name: string;
+  /** Short name shown on the card (audit issue 28). */
+  displayName: string;
+  /** Stand-in category photo, or null to keep the line drawing (audit issue 26). */
+  categoryImage: StockImage | null;
   categoryId: string;
   image: ProductImage | null;
   illustration: ProductIllustrationKey;
@@ -47,6 +52,8 @@ export interface GalleryLabels {
   emptyAction: string;
   errorMessage: string;
   errorFallback: string;
+  /** Visible label on stand-in category photos. */
+  illustrative: string;
 }
 
 export interface ProductGalleryProps {
@@ -232,7 +239,7 @@ export function ProductGallery({ categories, products, labels, shopHref }: Produ
             }
           }}
           className={cn(
-            "no-scrollbar flex gap-6 overflow-x-auto overscroll-x-contain pb-6",
+            "no-scrollbar flex gap-6 overflow-x-auto overscroll-x-contain pt-2 pb-6",
             "[scroll-padding-inline-start:max(var(--page-pad),calc((100%-var(--container-page))/2))] [padding-inline-start:max(var(--page-pad),calc((100%-var(--container-page))/2))]",
             "pr-[var(--page-pad)]",
             dragging ? "cursor-grabbing snap-none select-none" : "snap-x snap-mandatory",
@@ -253,6 +260,9 @@ export function ProductGallery({ categories, products, labels, shopHref }: Produ
             >
               <ProductCard
                 name={product.name}
+                displayName={product.displayName}
+                categoryImage={product.categoryImage}
+                illustrativeLabel={labels.illustrative}
                 category={labelFor(product.categoryId)}
                 image={product.image}
                 illustration={product.illustration}
@@ -272,42 +282,14 @@ export function ProductGallery({ categories, products, labels, shopHref }: Produ
 
   return (
     <div>
-      <div className="container-page flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
-        <div className="min-w-0 flex-1">
-          <CategoryTabs
-            tabs={tabs}
-            value={category}
-            onChange={changeCategory}
-            panelId={panelId}
-            idPrefix={idPrefix}
-          />
-        </div>
-        <div className={cn("hidden gap-2", finePointer && state.status === "ready" && "md:flex")}>
-          <button
-            type="button"
-            aria-label="Previous products"
-            aria-controls={`${panelId}-track`}
-            disabled={edges.start}
-            onClick={() => {
-              scrollByCards(-1);
-            }}
-            className="flex size-11 items-center justify-center rounded-full border border-navy-950/20 text-navy-950 transition-colors duration-200 hover:border-deep-gold hover:text-deep-gold disabled:pointer-events-none disabled:opacity-40"
-          >
-            <ArrowLeft aria-hidden="true" size={18} strokeWidth={ICON_STROKE} />
-          </button>
-          <button
-            type="button"
-            aria-label="Next products"
-            aria-controls={`${panelId}-track`}
-            disabled={edges.end}
-            onClick={() => {
-              scrollByCards(1);
-            }}
-            className="flex size-11 items-center justify-center rounded-full border border-navy-950/20 text-navy-950 transition-colors duration-200 hover:border-deep-gold hover:text-deep-gold disabled:pointer-events-none disabled:opacity-40"
-          >
-            <ArrowRight aria-hidden="true" size={18} strokeWidth={ICON_STROKE} />
-          </button>
-        </div>
+      <div className="container-page">
+        <CategoryTabs
+          tabs={tabs}
+          value={category}
+          onChange={changeCategory}
+          panelId={panelId}
+          idPrefix={idPrefix}
+        />
       </div>
 
       <div
@@ -336,13 +318,44 @@ export function ProductGallery({ categories, products, labels, shopHref }: Produ
           </AnimatePresence>
         </section>
         {state.status === "ready" ? (
-          <div className="container-page mt-2" aria-hidden="true">
-            <div className="h-0.5 w-full overflow-hidden rounded-full bg-slate-200">
+          // Carousel row: progress bar plus the previous and next buttons (audit issue 25 moved
+          // them here from the category row).
+          <div className="container-page mt-2 flex items-center gap-4">
+            <div
+              aria-hidden="true"
+              className="h-0.5 min-w-0 flex-1 overflow-hidden rounded-full bg-slate-200"
+            >
               <div
                 ref={progressRef}
                 className="h-full w-full origin-left bg-navy-950"
                 style={{ transform: "scaleX(0.04)" }}
               />
+            </div>
+            <div className={cn("hidden gap-2", finePointer && "md:flex")}>
+              <button
+                type="button"
+                aria-label="Previous products"
+                aria-controls={`${panelId}-track`}
+                disabled={edges.start}
+                onClick={() => {
+                  scrollByCards(-1);
+                }}
+                className="flex size-11 items-center justify-center rounded-full border border-navy-950/20 text-navy-950 transition-colors duration-200 hover:border-deep-gold hover:text-deep-gold disabled:pointer-events-none disabled:opacity-40"
+              >
+                <ArrowLeft aria-hidden="true" size={18} strokeWidth={ICON_STROKE} />
+              </button>
+              <button
+                type="button"
+                aria-label="Next products"
+                aria-controls={`${panelId}-track`}
+                disabled={edges.end}
+                onClick={() => {
+                  scrollByCards(1);
+                }}
+                className="flex size-11 items-center justify-center rounded-full border border-navy-950/20 text-navy-950 transition-colors duration-200 hover:border-deep-gold hover:text-deep-gold disabled:pointer-events-none disabled:opacity-40"
+              >
+                <ArrowRight aria-hidden="true" size={18} strokeWidth={ICON_STROKE} />
+              </button>
             </div>
           </div>
         ) : null}

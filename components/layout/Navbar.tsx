@@ -87,11 +87,11 @@ export function Navbar({
           scrolled && !menuOpen ? "-translate-y-4" : "translate-y-0",
         )}
       >
-        {/* Glass layer: the only glassmorphism on the page. */}
+        {/* Scrolled bar: navy at 0.92 opacity over every section, so it never turns grey over light sections (audit issue 5). */}
         <div
           aria-hidden="true"
           className={cn(
-            "absolute inset-x-0 top-4 bottom-0 border-b border-line-dark-soft bg-navy-950/72 backdrop-blur-[16px] transition-opacity duration-[240ms] ease-standard",
+            "absolute inset-x-0 top-4 bottom-0 border-b border-line-dark-soft bg-navy-950/92 backdrop-blur-[16px] transition-opacity duration-[240ms] ease-standard",
             scrolled && !menuOpen ? "opacity-100" : "opacity-0",
           )}
         />

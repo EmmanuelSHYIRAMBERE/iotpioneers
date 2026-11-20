@@ -9,15 +9,18 @@ import { CompanyIntro } from "@/components/sections/CompanyIntro";
 import { ContactSection } from "@/components/sections/ContactSection";
 import { DataHubShowcase } from "@/components/sections/DataHubShowcase";
 import { HeroSection } from "@/components/sections/HeroSection";
+import { PathTableSection } from "@/components/sections/PathTableSection";
 import { ShopShowcase } from "@/components/sections/ShopShowcase";
 import { SolutionsIndex } from "@/components/sections/SolutionsIndex";
 import { TechnologyMarquee } from "@/components/sections/TechnologyMarquee";
+import { ValueStrip } from "@/components/sections/ValueStrip";
 import { WhySection } from "@/components/sections/WhySection";
 
 /**
  * The single page, in the order of the visitor journey ("Signal to Insight"):
- * Hero (dark) → Marquee (blue) → Introduction (light) → Solutions (white) → IoTDataHub (dark)
- * → Shop (light) → Why (dark) → CTA (dark gradient) → Footer (deepest navy).
+ * Hero (dark) → Value strip (dark) → Marquee (gold band) → Introduction (light) → Solutions (white)
+ * → IoTDataHub (dark) → Shop (light) → Which do you need? (light) → Why (dark) → CTA (dark gradient)
+ * → Footer (deepest navy).
  */
 export default function HomePage() {
   return (
@@ -33,6 +36,7 @@ export default function HomePage() {
       />
       <main id="main-content" tabIndex={-1} className="outline-none">
         <HeroSection content={hero} />
+        <ValueStrip />
         <TechnologyMarquee
           label={marquee.label}
           items={marquee.items}
@@ -42,6 +46,7 @@ export default function HomePage() {
         <SolutionsIndex />
         <DataHubShowcase />
         <ShopShowcase />
+        <PathTableSection />
         <WhySection />
         <ContactSection />
       </main>

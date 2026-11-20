@@ -25,6 +25,10 @@ export interface ParticleNetworkProps {
   calmRef?: RefObject<HTMLElement | null>;
   /** Receives the smoothed pointer offset (-1..1) each frame, for text parallax. */
   onParallax?: (x: number, y: number) => void;
+  /** Faint background layer: about 25 nodes, no pulses, half opacity (hero behind the globe). */
+  faint?: boolean;
+  /** Converge mode: the network flows into the centre of this element (audit issue 30). */
+  focusRef?: RefObject<HTMLElement | null>;
   className?: string;
 }
 
@@ -49,6 +53,8 @@ export function ParticleNetwork({
   seed = 7,
   calmRef,
   onParallax,
+  faint = false,
+  focusRef,
   className,
 }: ParticleNetworkProps) {
   const wrapperRef = useRef<HTMLDivElement>(null);
@@ -73,13 +79,22 @@ export function ParticleNetwork({
     if (!wrapper) return;
     const measure = (): void => {
       const width = wrapper.clientWidth;
-      const { count, linkDistance } = densityFor(width, mode);
+      const { count, linkDistance } = densityFor(width, mode, faint);
       setBucket(`${String(count)}-${String(linkDistance)}-${layoutFor(width, mode)}`);
       const engine = engineRef.current;
       if (engine) {
         engine.resize(wrapper.clientWidth, wrapper.clientHeight, window.devicePixelRatio || 1);
         updateCalm();
+        updateFocus();
       }
+    };
+    const updateFocus = (): void => {
+      const engine = engineRef.current;
+      const focus = focusRef?.current;
+      if (!engine || !focus) return;
+      const a = wrapper.getBoundingClientRect();
+      const b = focus.getBoundingClientRect();
+      engine.setFocusPoint({ x: b.left - a.left + b.width / 2, y: b.top - a.top + b.height / 2 });
     };
     const updateCalm = (): void => {
       const engine = engineRef.current;
@@ -100,7 +115,7 @@ export function ParticleNetwork({
     return () => {
       observer.disconnect();
     };
-  }, [mode, calmRef]);
+  }, [mode, calmRef, faint, focusRef]);
 
   // Build the engine for the current bucket.
   useEffect(() => {
@@ -110,7 +125,7 @@ export function ParticleNetwork({
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
     const width = wrapper.clientWidth;
-    const { count, linkDistance } = densityFor(width, mode);
+    const { count, linkDistance } = densityFor(width, mode, faint);
     const lowPower = typeof navigator !== "undefined" && (navigator.hardwareConcurrency || 8) <= 4;
     const engine = new ParticleNetworkEngine(ctx, {
       mode,
@@ -120,6 +135,7 @@ export function ParticleNetwork({
       interactive,
       seed,
       lowPower,
+      faint,
     });
     engine.resize(width, wrapper.clientHeight, window.devicePixelRatio || 1);
     const calm = calmRef?.current;
@@ -133,6 +149,12 @@ export function ParticleNetwork({
         height: b.height,
       });
     }
+    const focus = focusRef?.current;
+    if (focus) {
+      const a = wrapper.getBoundingClientRect();
+      const b = focus.getBoundingClientRect();
+      engine.setFocusPoint({ x: b.left - a.left + b.width / 2, y: b.top - a.top + b.height / 2 });
+    }
     engine.onFrame = (x, y) => {
       canvas.style.transform = `translate3d(${(-x * CANVAS_PARALLAX).toFixed(2)}px, ${(-y * CANVAS_PARALLAX).toFixed(2)}px, 0)`;
       parallaxRef.current?.(x, y);
@@ -145,7 +167,7 @@ export function ParticleNetwork({
       engine.destroy();
       engineRef.current = null;
     };
-  }, [bucket, mode, interactive, seed, calmRef]);
+  }, [bucket, mode, interactive, seed, calmRef, faint, focusRef]);
 
   // Run only while in view, the tab is visible, not paused, and motion is allowed.
   useEffect(() => {
@@ -199,7 +221,7 @@ export function ParticleNetwork({
       className={cn("absolute inset-0 overflow-hidden", className)}
     >
       <div ref={staticRef} className="absolute inset-0 transition-opacity">
-        <StaticNetwork seed={seed} variant={mode} />
+        <StaticNetwork seed={seed} variant={mode} faint={faint} />
       </div>
       <canvas
         ref={canvasRef}

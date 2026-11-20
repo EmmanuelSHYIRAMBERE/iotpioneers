@@ -5,6 +5,7 @@ import {
   shopHeading,
   shopHighlights,
 } from "@/content/shopHighlights";
+import { shopCategoryImages } from "@/content/images";
 import type { ShopAudience } from "@/content/types";
 import { ProductGallery } from "@/components/shop/ProductGallery";
 import { AnimatedButton } from "@/components/ui/AnimatedButton";
@@ -27,23 +28,29 @@ export function ShopShowcase() {
       aria-labelledby="shop-title"
       className="surface-light section-pad bg-cloud-50 text-navy-950"
     >
-      <div className="container-page grid-page items-end gap-y-8">
-        <div className="col-span-full lg:col-span-7">
-          <VerifyMarker verified={shopHeading.verified}>
-            <SectionHeading
-              id="shop-title"
-              eyebrow={shopHeading.eyebrow}
-              title={shopHeading.title}
-              lead={<p>{shopHeading.lead}</p>}
-              tone="onLight"
-            />
-          </VerifyMarker>
-        </div>
-        <div className="col-span-full lg:col-span-4 lg:col-start-9 lg:justify-self-end">
-          <AnimatedButton href={shopHeading.cta.href} external size="lg" tone="light">
-            {shopHeading.cta.label}
-          </AnimatedButton>
-        </div>
+      {/* Title, then the lead with the shop button beside it, bottoms aligned in one row, so
+          the button is never detached from its heading (audit issue 24). */}
+      <div className="container-page">
+        <VerifyMarker verified={shopHeading.verified}>
+          <SectionHeading
+            id="shop-title"
+            eyebrow={shopHeading.eyebrow}
+            title={shopHeading.title}
+            tone="onLight"
+          />
+          <div className="mt-6 flex flex-col items-start gap-6 lg:flex-row lg:items-end lg:justify-between lg:gap-12">
+            <p className="max-w-prose text-lead text-slate-600">{shopHeading.lead}</p>
+            <AnimatedButton
+              href={shopHeading.cta.href}
+              external
+              size="lg"
+              tone="light"
+              className="shrink-0"
+            >
+              {shopHeading.cta.label}
+            </AnimatedButton>
+          </div>
+        </VerifyMarker>
       </div>
 
       <div className="mt-14 md:mt-16">
@@ -55,6 +62,8 @@ export function ShopShowcase() {
           products={shopHighlights.map((product) => ({
             id: product.id,
             name: product.name,
+            displayName: product.displayName ?? product.name,
+            categoryImage: shopCategoryImages[product.categoryId] ?? null,
             categoryId: product.categoryId,
             image: product.image,
             illustration: product.illustration,
@@ -67,6 +76,7 @@ export function ShopShowcase() {
             emptyAction: shopHeading.emptyActionLabel,
             errorMessage: shopHeading.errorMessage,
             errorFallback: shopHeading.errorFallbackLabel,
+            illustrative: shopHeading.illustrativeLabel,
           }}
           shopHref={shopHeading.cta.href}
         />

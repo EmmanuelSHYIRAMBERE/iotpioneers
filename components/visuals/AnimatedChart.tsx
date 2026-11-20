@@ -22,6 +22,10 @@ export interface ChartSeries {
   decimals: number;
   readings: readonly SensorReading[];
   visible: boolean;
+  /** Dashed line style, so series differ by more than colour (audit issue 21). */
+  dashed?: boolean;
+  /** Unit shown on the y axis and in the legend, for example "°C". */
+  unit: string;
 }
 
 export interface AnimatedChartProps {
@@ -44,14 +48,44 @@ const VIEW_W = 1000;
 const VIEW_H = 300;
 const PAD_Y = 24;
 
-function scaleY(readings: readonly SensorReading[]): (value: number) => number {
+function rangeOf(readings: readonly SensorReading[]): { lo: number; hi: number } {
   const values = readings.map((reading) => reading.value);
   const min = Math.min(...values);
   const max = Math.max(...values);
   const pad = (max - min || 1) * 0.25;
-  const lo = min - pad;
-  const hi = max + pad;
+  return { lo: min - pad, hi: max + pad };
+}
+
+function scaleY(readings: readonly SensorReading[]): (value: number) => number {
+  const { lo, hi } = rangeOf(readings);
   return (value) => PAD_Y + (1 - (value - lo) / (hi - lo)) * (VIEW_H - PAD_Y * 2);
+}
+
+/** Gridline positions, as fractions of the plot height from the top. */
+const GRID = [0.25, 0.5, 0.75] as const;
+
+/** Value at a gridline fraction, the inverse of scaleY. */
+function valueAt(readings: readonly SensorReading[], fraction: number): number {
+  const { lo, hi } = rangeOf(readings);
+  return lo + (1 - (fraction * VIEW_H - PAD_Y) / (VIEW_H - PAD_Y * 2)) * (hi - lo);
+}
+
+/** Legend swatch: a short line in the series colour and style. */
+function Swatch({ color, dashed }: { color: string; dashed: boolean }) {
+  return (
+    <svg width="24" height="8" viewBox="0 0 24 8" aria-hidden="true" className="shrink-0">
+      <line
+        x1="1"
+        y1="4"
+        x2="23"
+        y2="4"
+        stroke={color}
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeDasharray={dashed ? "4 4" : undefined}
+      />
+    </svg>
+  );
 }
 
 function pathFor(readings: readonly SensorReading[]): string {
@@ -64,6 +98,31 @@ function pathFor(readings: readonly SensorReading[]): string {
         `${index === 0 ? "M" : "L"}${(index * step).toFixed(2)} ${y(reading.value).toFixed(2)}`,
     )
     .join(" ");
+}
+
+/** Y axis labels at the three gridlines, in the series colour's unit (decorative; the slider and
+ * summary carry the values for assistive technology). */
+function YAxis({ series, side }: { series: ChartSeries; side: "left" | "right" }) {
+  return (
+    <div
+      aria-hidden="true"
+      className={cn(
+        "tabular relative w-11 shrink-0 font-mono text-small text-slate-400",
+        side === "left" ? "pr-1.5 text-right" : "pl-1.5 text-left",
+      )}
+    >
+      {GRID.map((fraction) => (
+        <span
+          key={fraction}
+          className="absolute inset-x-0 -translate-y-1/2 whitespace-nowrap"
+          style={{ top: `${String(fraction * 100)}%` }}
+        >
+          {valueAt(series.readings, fraction).toFixed(0)}
+          {series.unit}
+        </span>
+      ))}
+    </div>
+  );
 }
 
 /** Hand built SVG line chart with crosshair, tooltip and keyboard scrubbing. No chart library. */
@@ -143,6 +202,9 @@ export function AnimatedChart({
           .join(", ")}`
       : "Use arrow keys to read values";
 
+  const axisLeft = visibleSeries[0];
+  const axisRight = visibleSeries[1];
+
   const leftPercent = active !== null && pointCount > 1 ? (active / (pointCount - 1)) * 100 : 0;
 
   return (
@@ -150,157 +212,189 @@ export function AnimatedChart({
       <figcaption id={summaryId} className="sr-only">
         {summary}
       </figcaption>
-      <div className="relative min-h-0 flex-1">
-        <div
-          ref={plotRef}
-          role="slider"
-          tabIndex={0}
-          aria-label="Chart readings"
-          aria-describedby={summaryId}
-          aria-valuemin={0}
-          aria-valuemax={Math.max(0, pointCount - 1)}
-          aria-valuenow={active ?? pointCount - 1}
-          aria-valuetext={valueText}
-          onKeyDown={onKeyDown}
-          onFocus={() => {
-            if (active === null) setActive(pointCount - 1);
-          }}
-          onBlur={() => {
-            setActive(null);
-          }}
-          onPointerMove={(event) => {
-            if (event.pointerType === "mouse") setActive(indexFromPointer(event));
-          }}
-          onPointerDown={(event) => {
-            setActive(indexFromPointer(event));
-          }}
-          onPointerLeave={(event) => {
-            if (event.pointerType === "mouse") setActive(null);
-          }}
-          className="absolute inset-0 cursor-crosshair touch-pan-y rounded-button"
-        >
-          <svg
-            viewBox={`0 0 ${String(VIEW_W)} ${String(VIEW_H)}`}
-            preserveAspectRatio="none"
-            aria-hidden="true"
-            className="absolute inset-0 h-full w-full overflow-hidden"
+      {/* Legend: colour, line style and unit, so the series never differ by colour alone. */}
+      <ul
+        aria-hidden="true"
+        className="mb-2 flex flex-wrap gap-x-4 gap-y-1 font-mono text-small text-slate-400"
+      >
+        {visibleSeries.map((item) => (
+          <li key={item.id} className="flex items-center gap-2">
+            <Swatch color={item.color} dashed={item.dashed ?? false} />
+            {item.label} ({item.unit})
+          </li>
+        ))}
+      </ul>
+      <div className="relative flex min-h-0 flex-1">
+        {/* Y axis values for the first visible series (left) and the second (right). */}
+        {axisLeft ? <YAxis series={axisLeft} side="left" /> : null}
+        <div className="relative min-h-0 flex-1">
+          <div
+            ref={plotRef}
+            role="slider"
+            tabIndex={0}
+            aria-label="Chart readings"
+            aria-describedby={summaryId}
+            aria-valuemin={0}
+            aria-valuemax={Math.max(0, pointCount - 1)}
+            aria-valuenow={active ?? pointCount - 1}
+            aria-valuetext={valueText}
+            onKeyDown={onKeyDown}
+            onFocus={() => {
+              if (active === null) setActive(pointCount - 1);
+            }}
+            onBlur={() => {
+              setActive(null);
+            }}
+            onPointerMove={(event) => {
+              if (event.pointerType === "mouse") setActive(indexFromPointer(event));
+            }}
+            onPointerDown={(event) => {
+              setActive(indexFromPointer(event));
+            }}
+            onPointerLeave={(event) => {
+              if (event.pointerType === "mouse") setActive(null);
+            }}
+            className="absolute inset-0 cursor-crosshair touch-pan-y rounded-button"
           >
-            {[0.25, 0.5, 0.75].map((fraction) => (
-              <line
-                key={fraction}
-                x1="0"
-                x2={VIEW_W}
-                y1={VIEW_H * fraction}
-                y2={VIEW_H * fraction}
-                className="stroke-slate-400/10"
-                strokeWidth="1"
-                vectorEffect="non-scaling-stroke"
-              />
-            ))}
-            <g ref={shiftRef}>
-              {paths.map((item) => (
-                <motion.g
-                  key={item.id}
-                  initial={false}
-                  animate={{ opacity: item.visible ? 1 : 0 }}
-                  transition={{ duration: s(timing.solutionBar), ease: ease.standard }}
-                >
-                  <motion.path
-                    key={rangeKey}
-                    d={item.d}
-                    fill="none"
-                    stroke={item.color}
-                    strokeWidth="2"
-                    strokeLinejoin="round"
-                    strokeLinecap="round"
-                    vectorEffect="non-scaling-stroke"
-                    initial={instant ? false : { pathLength: 0 }}
-                    animate={{ pathLength: 1 }}
-                    transition={{ duration: instant ? 0 : s(timing.chartDraw), ease: ease.outExpo }}
-                  />
-                  {drawn && !instant ? (
+            <svg
+              viewBox={`0 0 ${String(VIEW_W)} ${String(VIEW_H)}`}
+              preserveAspectRatio="none"
+              aria-hidden="true"
+              className="absolute inset-0 h-full w-full overflow-hidden"
+            >
+              {GRID.map((fraction) => (
+                <line
+                  key={fraction}
+                  x1="0"
+                  x2={VIEW_W}
+                  y1={VIEW_H * fraction}
+                  y2={VIEW_H * fraction}
+                  className="stroke-slate-400/10"
+                  strokeWidth="1"
+                  vectorEffect="non-scaling-stroke"
+                />
+              ))}
+              <g ref={shiftRef}>
+                {paths.map((item) => (
+                  <motion.g
+                    key={item.id}
+                    initial={false}
+                    animate={{ opacity: item.visible ? 1 : 0 }}
+                    transition={{ duration: s(timing.solutionBar), ease: ease.standard }}
+                  >
                     <motion.path
-                      key={`trace-${rangeKey}`}
+                      key={rangeKey}
                       d={item.d}
                       fill="none"
                       stroke={item.color}
-                      strokeWidth="5"
+                      strokeWidth="2"
                       strokeLinejoin="round"
                       strokeLinecap="round"
+                      strokeDasharray={item.dashed ? "6 5" : undefined}
                       vectorEffect="non-scaling-stroke"
-                      initial={{ pathLength: 0, opacity: 0.45 }}
-                      animate={{ pathLength: 1, opacity: [0.45, 0.45, 0] }}
+                      {...(item.dashed
+                        ? {}
+                        : {
+                            initial: instant ? false : { pathLength: 0 },
+                            animate: { pathLength: 1 },
+                          })}
                       transition={{
-                        pathLength: { duration: s(timing.chartDraw), ease: ease.outExpo },
-                        opacity: {
-                          duration: s(timing.chartDraw + timing.dataTween),
-                          times: [0, 0.7, 1],
-                        },
+                        duration: instant ? 0 : s(timing.chartDraw),
+                        ease: ease.outExpo,
                       }}
                     />
-                  ) : null}
-                </motion.g>
-              ))}
-            </g>
-            {active !== null ? (
-              <line
-                x1={(leftPercent / 100) * VIEW_W}
-                x2={(leftPercent / 100) * VIEW_W}
-                y1="0"
-                y2={VIEW_H}
-                className="stroke-slate-400/40"
-                strokeWidth="1"
-                vectorEffect="non-scaling-stroke"
-              />
+                    {drawn && !instant ? (
+                      <motion.path
+                        key={`trace-${rangeKey}`}
+                        d={item.d}
+                        fill="none"
+                        stroke={item.color}
+                        strokeWidth="5"
+                        strokeLinejoin="round"
+                        strokeLinecap="round"
+                        vectorEffect="non-scaling-stroke"
+                        initial={{ pathLength: 0, opacity: 0.45 }}
+                        animate={{ pathLength: 1, opacity: [0.45, 0.45, 0] }}
+                        transition={{
+                          pathLength: { duration: s(timing.chartDraw), ease: ease.outExpo },
+                          opacity: {
+                            duration: s(timing.chartDraw + timing.dataTween),
+                            times: [0, 0.7, 1],
+                          },
+                        }}
+                      />
+                    ) : null}
+                  </motion.g>
+                ))}
+              </g>
+              {active !== null ? (
+                <line
+                  x1={(leftPercent / 100) * VIEW_W}
+                  x2={(leftPercent / 100) * VIEW_W}
+                  y1="0"
+                  y2={VIEW_H}
+                  className="stroke-slate-400/40"
+                  strokeWidth="1"
+                  vectorEffect="non-scaling-stroke"
+                />
+              ) : null}
+            </svg>
+
+            {active !== null && activeReading
+              ? visibleSeries.map((item) => {
+                  const reading = item.readings[active];
+                  if (!reading) return null;
+                  const top = (scaleY(item.readings)(reading.value) / VIEW_H) * 100;
+                  return (
+                    <span
+                      key={item.id}
+                      aria-hidden="true"
+                      className="pointer-events-none absolute size-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-navy-900"
+                      style={{
+                        left: `${String(leftPercent)}%`,
+                        top: `${String(top)}%`,
+                        backgroundColor: item.color,
+                      }}
+                    />
+                  );
+                })
+              : null}
+
+            {active !== null && activeReading ? (
+              <div
+                aria-hidden="true"
+                className={cn(
+                  "pointer-events-none absolute top-2 z-10 rounded-button border border-line-dark bg-navy-950/95 px-3 py-2 font-mono text-small whitespace-nowrap text-cloud-50",
+                  leftPercent > 60 ? "-translate-x-[calc(100%+12px)]" : "translate-x-3",
+                )}
+                style={{ left: `${String(leftPercent)}%` }}
+              >
+                <p className="text-slate-400">{formatClock(activeReading.timestamp)}</p>
+                {visibleSeries.map((item) => {
+                  const reading = item.readings[active];
+                  return reading ? (
+                    <p key={item.id} className="tabular flex items-center gap-2">
+                      <span
+                        className="size-2 rounded-full"
+                        style={{ backgroundColor: item.color }}
+                      />
+                      {item.label} {reading.value.toFixed(item.decimals)} {reading.unit}
+                    </p>
+                  ) : null;
+                })}
+              </div>
             ) : null}
-          </svg>
-
-          {active !== null && activeReading
-            ? visibleSeries.map((item) => {
-                const reading = item.readings[active];
-                if (!reading) return null;
-                const top = (scaleY(item.readings)(reading.value) / VIEW_H) * 100;
-                return (
-                  <span
-                    key={item.id}
-                    aria-hidden="true"
-                    className="pointer-events-none absolute size-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-navy-900"
-                    style={{
-                      left: `${String(leftPercent)}%`,
-                      top: `${String(top)}%`,
-                      backgroundColor: item.color,
-                    }}
-                  />
-                );
-              })
-            : null}
-
-          {active !== null && activeReading ? (
-            <div
-              aria-hidden="true"
-              className={cn(
-                "pointer-events-none absolute top-2 z-10 rounded-button border border-line-dark bg-navy-950/95 px-3 py-2 font-mono text-small whitespace-nowrap text-cloud-50",
-                leftPercent > 60 ? "-translate-x-[calc(100%+12px)]" : "translate-x-3",
-              )}
-              style={{ left: `${String(leftPercent)}%` }}
-            >
-              <p className="text-slate-400">{formatClock(activeReading.timestamp)}</p>
-              {visibleSeries.map((item) => {
-                const reading = item.readings[active];
-                return reading ? (
-                  <p key={item.id} className="tabular flex items-center gap-2">
-                    <span className="size-2 rounded-full" style={{ backgroundColor: item.color }} />
-                    {item.label} {reading.value.toFixed(item.decimals)} {reading.unit}
-                  </p>
-                ) : null;
-              })}
-            </div>
-          ) : null}
+          </div>
         </div>
+        {axisRight ? <YAxis series={axisRight} side="right" /> : null}
       </div>
       <div
         aria-hidden="true"
-        className="mt-2 flex justify-between font-mono text-small text-slate-400"
+        className={cn(
+          "mt-2 flex justify-between font-mono text-small text-slate-400",
+          axisLeft && "pl-11",
+          axisRight && "pr-11",
+        )}
       >
         <span>{reference[0] ? formatClock(reference[0].timestamp) : ""}</span>
         <span>

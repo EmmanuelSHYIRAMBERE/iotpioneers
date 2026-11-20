@@ -39,13 +39,13 @@ function Picture({
       />
     );
   }
-  // No client photograph yet: a labelled technical drawing, never a stock photo.
+  // No photograph file yet: a labelled technical drawing.
   return <MediaPlaceholder label={image.placeholderLabel} variant={variant} />;
 }
 
 /**
- * Layered composition: a 4:5 image, a 3:2 image overlapping its lower left corner, and a 1px
- * blue technical frame behind. Clip path reveals; parallax at md and up (off with reduced motion).
+ * Layered composition: a framed browser window panel holding a 4:5 photo, and a 3:2 photo
+ * overlapping its lower left corner. Clip path reveals; parallax at md and up (off with reduced motion).
  */
 export function IntroImages({ large, small, annotation, annotationVerified }: IntroImagesProps) {
   const ref = useRef<HTMLDivElement>(null);
@@ -68,15 +68,12 @@ export function IntroImages({ large, small, annotation, annotationVerified }: In
         whileInView="visible"
         viewport={{ once: true, amount: viewportAmount.reveal }}
       >
-        {/* Technical frame, offset 16px behind the large image. */}
-        <div
-          aria-hidden="true"
-          className="absolute inset-0 -translate-x-4 translate-y-4 border border-deep-gold"
-        />
         <VerifyMarker verified={large.verified}>
+          {/* Framed "browser window" panel (reference-ui-patterns): a navy900 frame with a top bar
+              of three dots and a 2px gold accent line, holding the large photo. */}
           <motion.div
             data-reveal=""
-            className="relative aspect-[4/5] overflow-hidden rounded-card"
+            className="relative overflow-hidden rounded-frame bg-navy-900 shadow-hover"
             variants={{
               hidden: { clipPath: "inset(100% 0% 0% 0%)" },
               visible: {
@@ -85,19 +82,30 @@ export function IntroImages({ large, small, annotation, annotationVerified }: In
               },
             }}
           >
-            <motion.div
-              className="h-full w-full"
-              variants={{
-                hidden: { scale: desktop ? 1.12 : 1 },
-                visible: { scale: 1, transition: { duration: revealDuration, ease: ease.outExpo } },
-              }}
-            >
-              <Picture
-                image={large}
-                variant="bench"
-                sizes="(min-width: 1024px) 40vw, (min-width: 768px) 70vw, 82vw"
-              />
-            </motion.div>
+            <div aria-hidden="true" className="flex h-9 items-center gap-2 px-4">
+              <span className="size-2 rounded-full bg-slate-400/50" />
+              <span className="size-2 rounded-full bg-slate-400/50" />
+              <span className="size-2 rounded-full bg-slate-400/50" />
+            </div>
+            <div aria-hidden="true" className="h-0.5 bg-pioneer-gold" />
+            <div className="relative aspect-[4/5] overflow-hidden">
+              <motion.div
+                className="h-full w-full"
+                variants={{
+                  hidden: { scale: desktop ? 1.12 : 1 },
+                  visible: {
+                    scale: 1,
+                    transition: { duration: revealDuration, ease: ease.outExpo },
+                  },
+                }}
+              >
+                <Picture
+                  image={large}
+                  variant="bench"
+                  sizes="(min-width: 1024px) 40vw, (min-width: 768px) 70vw, 82vw"
+                />
+              </motion.div>
+            </div>
           </motion.div>
         </VerifyMarker>
       </motion.div>

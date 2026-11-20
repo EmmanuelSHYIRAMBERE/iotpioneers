@@ -28,21 +28,32 @@ export function DataHubShowcase() {
       <AnimatedBackground variant="dataHubGlow" className="-z-10" />
 
       <div className="container-page">
-        <div className="grid-page gap-y-8">
-          <div className="col-span-full lg:col-span-7">
-            <SectionHeading
-              id="iotdatahub-title"
-              eyebrow={dataHub.eyebrow}
-              title={dataHub.title}
-              tone="onDark"
-              lead={
-                <VerifyMarker verified={dataHub.lead.verified}>
+        {/* One left column: title, ownership line under it, lead, protocol tag and CTAs together
+            (audit issue 17). */}
+        <div className="max-w-3xl">
+          <SectionHeading
+            id="iotdatahub-title"
+            eyebrow={dataHub.eyebrow}
+            title={dataHub.title}
+            tone="onDark"
+            lead={
+              <>
+                <VerifyMarker verified={dataHub.ownership.verified}>
+                  <p className="text-small text-slate-400">{dataHub.ownership.text}</p>
+                </VerifyMarker>
+                <VerifyMarker verified={dataHub.lead.verified} className="mt-4">
                   <p>{dataHub.lead.text}</p>
                 </VerifyMarker>
-              }
-            />
-          </div>
-          <div className="col-span-full flex flex-col items-start gap-6 lg:col-span-4 lg:col-start-9 lg:justify-end">
+              </>
+            }
+          />
+          <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-4">
+            <AnimatedButton href={dataHub.cta.href} external size="lg">
+              {dataHub.cta.label}
+            </AnimatedButton>
+            <AnimatedButton href="#iotdatahub-demo" variant="link" tone="dark">
+              {dataHub.howItWorksLabel}
+            </AnimatedButton>
             <VerifyMarker verified={dataHub.protocols.verified}>
               <ul aria-label="Supported protocols" className="flex flex-wrap gap-2">
                 {dataHub.protocols.items.map((protocol) => (
@@ -54,17 +65,6 @@ export function DataHubShowcase() {
                   </li>
                 ))}
               </ul>
-            </VerifyMarker>
-            <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
-              <AnimatedButton href={dataHub.cta.href} external size="lg">
-                {dataHub.cta.label}
-              </AnimatedButton>
-              <AnimatedButton href="#iotdatahub-demo" variant="link" tone="dark">
-                {dataHub.howItWorksLabel}
-              </AnimatedButton>
-            </div>
-            <VerifyMarker verified={dataHub.ownership.verified}>
-              <p className="text-small text-slate-400">{dataHub.ownership.text}</p>
             </VerifyMarker>
           </div>
         </div>
@@ -97,11 +97,12 @@ export function DataHubShowcase() {
             verified: feature.verified,
           }))}
         />
-        <div className="mt-16 flex flex-col items-start gap-4">
+        {/* The simulated-data disclaimer appears once: the badge on the frame plus the caption under
+            it (audit issue 22). */}
+        <div className="mt-16">
           <AnimatedButton href={dataHub.cta.href} external size="lg">
             {dataHub.cta.label}
           </AnimatedButton>
-          <p className="text-small text-slate-400">{dataHub.endNote}</p>
         </div>
       </div>
     </section>

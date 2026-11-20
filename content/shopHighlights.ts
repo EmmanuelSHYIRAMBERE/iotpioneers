@@ -15,6 +15,8 @@ export const shopHeading = {
   emptyActionLabel: "Browse all categories in the shop",
   errorMessage: "We couldn't load products right now.",
   errorFallbackLabel: "Visit the shop directly",
+  /** Visible label on stand-in category photos (imagery-stand-ins skill). */
+  illustrativeLabel: "Illustrative image",
   verified: false,
   source: "Provisional copy from specification section 9.07; audience needs confirmation",
 } as const satisfies Verifiable & Record<string, unknown>;
@@ -73,6 +75,7 @@ export const shopHighlights: readonly ProductHighlight[] = [
   {
     id: "esp32-devboard",
     name: "ESP32 ESP-32 Wireless WiFi Bluetooth Development Board",
+    displayName: "ESP32 Development Board",
     categoryId: "boards",
     image: null,
     illustration: "board",
@@ -83,6 +86,7 @@ export const shopHighlights: readonly ProductHighlight[] = [
   {
     id: "nodemcu-esp8266",
     name: "NodeMCU ESP8266",
+    displayName: "NodeMCU ESP8266",
     categoryId: "boards",
     image: null,
     illustration: "board",
@@ -93,6 +97,7 @@ export const shopHighlights: readonly ProductHighlight[] = [
   {
     id: "arduino-uno",
     name: "Arduino Uno",
+    displayName: "Arduino Uno",
     categoryId: "boards",
     image: null,
     illustration: "board",
@@ -103,6 +108,7 @@ export const shopHighlights: readonly ProductHighlight[] = [
   {
     id: "esp32-cam",
     name: "ESP32 Camera Development Board WiFi+Bluetooth Module",
+    displayName: "ESP32 Camera Board",
     categoryId: "boards",
     image: null,
     illustration: "camera",
@@ -113,6 +119,7 @@ export const shopHighlights: readonly ProductHighlight[] = [
   {
     id: "pir-hc-sr501",
     name: "PIR Motion Sensor Detector Module (HC-SR501)",
+    displayName: "PIR Motion Sensor",
     categoryId: "sensors",
     image: null,
     illustration: "sensor",
@@ -123,6 +130,7 @@ export const shopHighlights: readonly ProductHighlight[] = [
   {
     id: "usb-ir-converter",
     name: "USB to Near Infrared IR Converter (IEC62056 / DLMS)",
+    displayName: "USB to IR Converter",
     categoryId: "communication",
     image: null,
     illustration: "module",
@@ -133,6 +141,7 @@ export const shopHighlights: readonly ProductHighlight[] = [
   {
     id: "ttl-ir-adapter",
     name: "My014-B TTL to IR Near Infrared Optic Adapter for IEC62056 Meter Reading",
+    displayName: "TTL to IR Adapter",
     categoryId: "communication",
     image: null,
     illustration: "module",
@@ -143,6 +152,7 @@ export const shopHighlights: readonly ProductHighlight[] = [
   {
     id: "lcd-16x2",
     name: "LCD Display (16X2)",
+    displayName: "LCD Display 16X2",
     categoryId: "displays",
     image: null,
     illustration: "display",
@@ -153,6 +163,7 @@ export const shopHighlights: readonly ProductHighlight[] = [
   {
     id: "lcd-20x4",
     name: "LCD 20X4 2004 MOD52",
+    displayName: "LCD 20X4",
     categoryId: "displays",
     image: null,
     illustration: "display",
@@ -163,6 +174,7 @@ export const shopHighlights: readonly ProductHighlight[] = [
   {
     id: "nokia-5110",
     name: "84×48 Pixel LCD Module For Nokia 5110",
+    displayName: "Nokia 5110 LCD Module",
     categoryId: "displays",
     image: null,
     illustration: "display",
@@ -173,6 +185,7 @@ export const shopHighlights: readonly ProductHighlight[] = [
   {
     id: "i2c-lcd-controller",
     name: "I2C LCD Controller Module for 1602 or 2004",
+    displayName: "I2C LCD Controller",
     categoryId: "displays",
     image: null,
     illustration: "module",
@@ -183,6 +196,7 @@ export const shopHighlights: readonly ProductHighlight[] = [
   {
     id: "seven-segment-ca",
     name: "7-Segment Display – CA Red",
+    displayName: "7-Segment Display",
     categoryId: "displays",
     image: null,
     illustration: "segment",
@@ -193,6 +207,7 @@ export const shopHighlights: readonly ProductHighlight[] = [
   {
     id: "resistor-100r",
     name: "Metal Oxide 1W 100 Ohm Film Resistor",
+    displayName: "100 Ohm Film Resistor",
     categoryId: "prototyping",
     image: null,
     illustration: "component",

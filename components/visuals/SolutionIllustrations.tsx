@@ -3,7 +3,7 @@
 import { motion } from "motion/react";
 import type { IllustrationKey } from "@/content/types";
 import { cn } from "@/lib/cn";
-import { ease, s, timing } from "@/lib/motion";
+import { ease, runTiming, s, timing } from "@/lib/motion";
 
 type Accent = "ink" | "gold" | "cyan";
 
@@ -27,18 +27,16 @@ interface Label {
   text: string;
 }
 
-interface Pulse {
-  from: readonly [number, number];
-  to: readonly [number, number];
-  delay: number;
-}
-
 interface Drawing {
   title: string;
+  /**
+   * Tight crop around the drawing, so it fills about 80% of the panel instead of floating in a
+   * 480 by 360 canvas (audit issue 16).
+   */
+  viewBox: string;
   strokes: readonly Stroke[];
   nodes: readonly Node[];
   labels?: readonly Label[];
-  pulses: readonly Pulse[];
 }
 
 const accentClass: Record<Accent, string> = {
@@ -54,6 +52,7 @@ const fillClass: Record<Accent, string> = {
 
 const DRAWINGS: Record<IllustrationKey, Drawing> = {
   iot: {
+    viewBox: "36 34 440 284",
     title: "Three sensor nodes linked to a gateway, which sends data onward to the cloud.",
     strokes: [
       { d: "M56 60 h56 v40 h-56 Z" },
@@ -78,13 +77,9 @@ const DRAWINGS: Record<IllustrationKey, Drawing> = {
       { x: 268, y: 138, text: "GATEWAY" },
       { x: 404, y: 140, text: "CLOUD" },
     ],
-    pulses: [
-      { from: [112, 80], to: [268, 180], delay: 0 },
-      { from: [112, 180], to: [268, 180], delay: 0.6 },
-      { from: [112, 280], to: [268, 180], delay: 1.2 },
-    ],
   },
   software: {
+    viewBox: "76 58 360 256",
     title: "Layered interface panels with code brackets, representing web and mobile software.",
     strokes: [
       { d: "M120 70 h260 v170 h-260 Z" },
@@ -103,9 +98,9 @@ const DRAWINGS: Record<IllustrationKey, Drawing> = {
       { x: 128, y: 123, r: 3, accent: "gold" },
     ],
     labels: [{ x: 90, y: 300, text: "WEB · MOBILE · API" }],
-    pulses: [{ from: [350, 210], to: [420, 210], delay: 0 }],
   },
   cloud: {
+    viewBox: "44 78 412 206",
     title: "Data nodes flowing into a database, which outputs a small chart.",
     strokes: [
       { d: "M60 90 C120 90 140 170 200 170", accent: "gold" },
@@ -128,12 +123,9 @@ const DRAWINGS: Record<IllustrationKey, Drawing> = {
       { x: 200, y: 268, text: "STORE" },
       { x: 340, y: 98, text: "INSIGHT" },
     ],
-    pulses: [
-      { from: [60, 90], to: [200, 170], delay: 0 },
-      { from: [60, 250], to: [200, 170], delay: 0.8 },
-    ],
   },
   automation: {
+    viewBox: "26 118 440 134",
     title: "A sensor triggers an actuator through an IF and THEN rule.",
     strokes: [
       { d: "M40 150 h60 v60 h-60 Z" },
@@ -155,12 +147,9 @@ const DRAWINGS: Record<IllustrationKey, Drawing> = {
       { x: 284, y: 186, text: "THEN" },
       { x: 392, y: 236, text: "ACTUATOR" },
     ],
-    pulses: [
-      { from: [100, 180], to: [150, 180], delay: 0 },
-      { from: [350, 180], to: [390, 180], delay: 0.9 },
-    ],
   },
   integration: {
+    viewBox: "40 50 404 264",
     title: "Separate systems joined by connector lines into one hub.",
     strokes: [
       { d: "M50 60 h90 v56 h-90 Z" },
@@ -180,10 +169,6 @@ const DRAWINGS: Record<IllustrationKey, Drawing> = {
       { x: 58, y: 276, text: "LEGACY" },
       { x: 348, y: 276, text: "APPS" },
     ],
-    pulses: [
-      { from: [140, 88], to: [240, 180], delay: 0 },
-      { from: [340, 272], to: [240, 180], delay: 0.7 },
-    ],
   },
 };
 
@@ -196,7 +181,11 @@ export interface SolutionIllustrationProps {
   className?: string;
 }
 
-/** Line illustration on the node motif: 1.5px ink strokes with blue and cyan accents. */
+/**
+ * Line illustration on the node motif: 1.5px ink strokes with deepGold and cyan accents. While
+ * the panel is visible, a deepGold pulse travels along each open gold line (the data path) every
+ * 2.4 seconds (audit issue 16). No pulses under reduced motion or off screen.
+ */
 export function SolutionIllustration({
   kind,
   animated,
@@ -206,7 +195,7 @@ export function SolutionIllustration({
   const drawing = DRAWINGS[kind];
   return (
     <svg
-      viewBox="0 0 480 360"
+      viewBox={drawing.viewBox}
       fill="none"
       role="img"
       aria-label={drawing.title}
@@ -260,28 +249,30 @@ export function SolutionIllustration({
         </text>
       ))}
       {animated && pulsing
-        ? drawing.pulses.map((pulse, index) => (
-            <motion.circle
-              key={`${kind}-p${String(index)}`}
-              cx={0}
-              cy={0}
-              r="3.5"
-              className="fill-cyan-500"
-              initial={{ x: pulse.from[0], y: pulse.from[1], opacity: 0 }}
-              animate={{
-                x: [pulse.from[0], pulse.to[0]],
-                y: [pulse.from[1], pulse.to[1]],
-                opacity: [0, 1, 1, 0],
-              }}
-              transition={{
-                duration: s(timing.cardStagger * 2),
-                ease: ease.inOutSine,
-                repeat: Infinity,
-                repeatDelay: 1.2,
-                delay: s(timing.illustrationDraw) + pulse.delay,
-              }}
-            />
-          ))
+        ? drawing.strokes
+            .filter((stroke) => stroke.accent === "gold" && !/z\s*$/i.test(stroke.d))
+            .map((stroke, index) => {
+              const begin = `${String(s(timing.illustrationDraw) + index * 0.35)}s`;
+              const dur = `${String(s(runTiming.illustrationPulse))}s`;
+              return (
+                <circle
+                  key={`${kind}-p${String(index)}`}
+                  r="3.5"
+                  className="fill-deep-gold"
+                  opacity="0"
+                >
+                  <animateMotion path={stroke.d} begin={begin} dur={dur} repeatCount="indefinite" />
+                  <animate
+                    attributeName="opacity"
+                    values="0;1;1;0"
+                    keyTimes="0;0.15;0.8;1"
+                    begin={begin}
+                    dur={dur}
+                    repeatCount="indefinite"
+                  />
+                </circle>
+              );
+            })
         : null}
     </svg>
   );

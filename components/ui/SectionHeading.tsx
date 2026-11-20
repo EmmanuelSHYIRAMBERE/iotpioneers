@@ -5,7 +5,7 @@ import { WordReveal } from "./WordReveal";
 export interface SectionHeadingProps {
   eyebrow: string;
   title: string;
-  /** Emphasised trailing words, coloured #60A5FA on dark or #2563EB on light. */
+  /** Emphasised trailing words, brightGold on dark or deepGold on light. */
   emphasis?: string;
   lead?: ReactNode;
   level?: 2 | 3;
@@ -16,7 +16,11 @@ export interface SectionHeadingProps {
   titleClassName?: string;
 }
 
-/** Eyebrow, word revealed title and optional lead, following the vertical rhythm 16 / 24. */
+/**
+ * Section header system (reference-ui-patterns): pill badge (the global `.eyebrow` class), an h2
+ * at display L, then a subtitle at lead size kept to about 70 characters per line (the prose
+ * container, 68ch). Left aligned by default; the Why and CTA headers pass align="center".
+ */
 export function SectionHeading({
   eyebrow,
   title,
@@ -51,7 +55,7 @@ export function SectionHeading({
       {lead ? (
         <div
           className={cn(
-            "mt-6 max-w-prose text-lead",
+            "mt-5 max-w-prose text-lead",
             align === "center" && "mx-auto",
             dark ? "text-slate-400" : "text-slate-600",
           )}

@@ -157,3 +157,245 @@ export const viewportAmount = {
 
 /** localStorage key for the footer "Reduce motion" toggle. */
 export const REDUCE_MOTION_STORAGE_KEY = "iotp-reduce-motion";
+
+/* -------------------------------------------------------------------------------------------
+ * Completion run additions (scroll-motion-choreography and connected-globe-hero skills).
+ * Components consume these; they never hardcode the numbers below.
+ * ----------------------------------------------------------------------------------------- */
+
+/** Extra timings for the completion run, in milliseconds. */
+export const runTiming = {
+  /** Directional entrance (enterLeft, enterRight). */
+  enter: 700,
+  /** Mobile cap for every entrance duration. */
+  enterMobileMax: 500,
+  clipFromRight: 1000,
+  tiltRise: 900,
+  drawStroke: 600,
+  /** Delay before a check icon draws after its row arrives. */
+  checkDrawDelay: 150,
+  /** Solutions illustration crossfade and the gold pulse interval along its lines. */
+  illustrationCrossfade: 300,
+  illustrationPulse: 2400,
+  /** Headline glow fade-in (CTA). */
+  glowFadeIn: 1200,
+  /** Button press scale and primary button ripple. */
+  press: 120,
+  ripple: 500,
+  /** Anchor arrival: target heading underline grows and fades. */
+  anchorHighlight: 1200,
+  /** Copy to clipboard check pop. */
+  copyPop: 200,
+  /** Card top bar grow. */
+  cardBar: 300,
+  /** Navbar entrance: logo fade, links start, and the gap between links. */
+  navLogoFade: 400,
+  navLinksAt: 100,
+  navLinkStagger: 40,
+  /** Mobile menu links enter from the right. */
+  menuLinkFromRight: 360,
+} as const;
+
+/** Extra staggers, in milliseconds. */
+export const runStagger = {
+  aboutParagraphs: 90,
+  solutionRows: 60,
+  valueStrip: 80,
+  pathRows: 90,
+  shopPills: 40,
+  shopCards: 80,
+  footerColumns: 60,
+} as const;
+
+/** Extra distances and angles. */
+export const runDistance = {
+  /** Directional entrance offset (halved on mobile). */
+  enter: 24,
+  /** tiltRise rise and starting rotateX (degrees), with its perspective in px. */
+  tiltRiseY: 32,
+  tiltRiseDeg: 8,
+  tiltRisePerspective: 1200,
+  /** clipFromRight starting image scale. */
+  clipScale: 1.08,
+  /** Card hover lift (px) and maximum pointer tilt (degrees). */
+  cardLift: 4,
+  cardTiltMax: 6,
+  /** Perspective (px) applied while a card tilts. */
+  cardPerspective: 900,
+  /** Button press scale. */
+  pressScale: 0.97,
+  /** Ripple grows to this multiple of the button width, at this opacity. */
+  rippleScale: 2.5,
+  rippleOpacity: 0.2,
+  /** Parallax distances (px). */
+  parallaxSmall: 30,
+  parallaxMedium: 40,
+  parallaxLarge: 80,
+  /** Navbar link drop. */
+  navLinkDrop: 8,
+  /** Copy to clipboard check pop starting scale. */
+  copyPopFrom: 0.6,
+  /** Footer brand signature rise. */
+  signatureRise: 24,
+} as const;
+
+/** Connected globe (connected-globe-hero skill). */
+export const globe = {
+  /** One full turn, west to east. */
+  turnMs: 40_000,
+  /** Kigali ring grows from 6px to 28px and fades over this period. */
+  kigaliPulseMs: 2400,
+  kigaliNodePx: 6,
+  kigaliRingMaxPx: 28,
+  kigaliLat: -1.95,
+  kigaliLon: 30.06,
+  /** Packet travel period range per arc. */
+  packetMinMs: 3000,
+  packetMaxMs: 6000,
+  arcsDesktop: 8,
+  arcsMobile: 4,
+  /** Orbits at this multiple of the globe radius. */
+  orbitRadiusMin: 1.15,
+  orbitRadiusMax: 1.35,
+  /** Pointer tilt toward the cursor and its smoothing factor. */
+  pointerTiltMaxDeg: 10,
+  pointerSmoothing: 0.08,
+  /** Touch drag inertia decay. */
+  dragDecayMs: 1200,
+  /** Static frame tilt for reduced motion and no JavaScript. */
+  staticTiltDeg: 20,
+  /** Frame rate caps. */
+  fpsDesktop: 60,
+  fpsLow: 30,
+  /** Device pixel ratio cap. */
+  maxDpr: 2,
+  /** Rendered diameter (px). */
+  sizeDesktop: 560,
+  sizeTablet: 360,
+  sizeMobile: 300,
+  /** Orbit periods, inner to outer (the outer orbit matches one globe turn). */
+  orbitPeriodsMs: [24_000, 32_000, 40_000],
+} as const;
+
+/** Hero cursor spotlight (reference-ui-patterns skill). */
+export const spotlight = {
+  sizePx: 480,
+  opacity: 0.06,
+  smoothing: 0.1,
+} as const;
+
+/** Marquee rows: pixels per second, and the hover slowdown factor. */
+export const marqueeSpeed = {
+  topPxPerSecond: 40,
+  bottomPxPerSecond: 32,
+  hoverFactor: 0.25,
+} as const;
+
+/** Entrance duration in seconds, capped on mobile. */
+function enterDuration(ms: number, isMobile: boolean): number {
+  return s(isMobile ? Math.min(ms, runTiming.enterMobileMax) : ms);
+}
+
+/** Opacity and x from the left (column on the left). Distances halve on mobile. */
+export function enterLeft(isMobile = false, delaySeconds = 0): Variants {
+  const x = isMobile ? runDistance.enter / 2 : runDistance.enter;
+  return {
+    hidden: { opacity: 0, x: -x },
+    visible: {
+      opacity: 1,
+      x: 0,
+      transition: {
+        duration: enterDuration(runTiming.enter, isMobile),
+        ease: ease.outExpo,
+        delay: delaySeconds,
+      },
+    },
+  };
+}
+
+/** Opacity and x from the right (column on the right). Distances halve on mobile. */
+export function enterRight(isMobile = false, delaySeconds = 0): Variants {
+  const x = isMobile ? runDistance.enter / 2 : runDistance.enter;
+  return {
+    hidden: { opacity: 0, x },
+    visible: {
+      opacity: 1,
+      x: 0,
+      transition: {
+        duration: enterDuration(runTiming.enter, isMobile),
+        ease: ease.outExpo,
+        delay: delaySeconds,
+      },
+    },
+  };
+}
+
+/** Full width elements rise from below (alias of the standard reveal). */
+export const enterUp = revealUp;
+
+/** Clip path from the right edge; pair with `clipScaleInner` on the image inside. */
+export function clipFromRight(isMobile = false, delaySeconds = 0): Variants {
+  return {
+    hidden: { clipPath: "inset(0% 0% 0% 100%)" },
+    visible: {
+      clipPath: "inset(0% 0% 0% 0%)",
+      transition: {
+        duration: enterDuration(runTiming.clipFromRight, isMobile),
+        ease: ease.outExpo,
+        delay: delaySeconds,
+      },
+    },
+  };
+}
+
+/** Image inside a clip reveal scales from 1.08 to 1. */
+export function clipScaleInner(isMobile = false, delaySeconds = 0): Variants {
+  return {
+    hidden: { scale: isMobile ? 1 : runDistance.clipScale },
+    visible: {
+      scale: 1,
+      transition: {
+        duration: enterDuration(runTiming.clipFromRight, isMobile),
+        ease: ease.outExpo,
+        delay: delaySeconds,
+      },
+    },
+  };
+}
+
+/** Rise with a perspective tilt easing to flat (dashboard). Set `transformPerspective` on the element. */
+export function tiltRise(isMobile = false, delaySeconds = 0): Variants {
+  return {
+    hidden: {
+      opacity: 0,
+      y: isMobile ? runDistance.tiltRiseY / 2 : runDistance.tiltRiseY,
+      rotateX: isMobile ? 0 : runDistance.tiltRiseDeg,
+    },
+    visible: {
+      opacity: 1,
+      y: 0,
+      rotateX: 0,
+      transition: {
+        duration: enterDuration(runTiming.tiltRise, isMobile),
+        ease: ease.outExpo,
+        delay: delaySeconds,
+      },
+    },
+  };
+}
+
+/** SVG stroke drawing (Motion pathLength). */
+export function drawStroke(delaySeconds = 0): Variants {
+  return {
+    hidden: { pathLength: 0 },
+    visible: {
+      pathLength: 1,
+      transition: { duration: s(runTiming.drawStroke), ease: ease.outExpo, delay: delaySeconds },
+    },
+  };
+}
+
+/** Parent variant that staggers up to MAX_STAGGERED_ITEMS children (alias with a clearer name). */
+export function staggerList(stepMs: number, delayMs = 0): Variants {
+  return staggerChildren(stepMs, delayMs);
+}

@@ -399,17 +399,27 @@
     }
   }
 
+  /*
+   * Section badge (reference-ui-patterns: pill badge). A full radius pill, 28px tall, 12px side
+   * padding, mono 12px uppercase with a 6px gold dot. Dark: navy900 fill, brightGold text (7.21:1),
+   * gold hairline. Light: white fill, deepGold text (5.75:1), deepGold hairline.
+   */
   .eyebrow {
     display: inline-flex;
     align-items: center;
-    gap: 10px;
+    gap: 8px;
+    min-height: 28px;
+    padding-inline: 12px;
+    border-radius: 9999px;
+    border: 1px solid color-mix(in srgb, var(--color-bright-gold) 35%, transparent);
+    background: var(--color-navy-900);
     font-family: var(--font-mono);
     font-weight: 500;
     font-size: var(--text-eyebrow);
     line-height: var(--text-eyebrow--line-height);
     letter-spacing: var(--text-eyebrow--letter-spacing);
     text-transform: uppercase;
-    color: var(--color-pioneer-gold);
+    color: var(--color-bright-gold);
   }
   .eyebrow::before {
     content: "";
@@ -420,7 +430,79 @@
     flex: none;
   }
   .surface-light .eyebrow {
+    border-color: color-mix(in srgb, var(--color-deep-gold) 30%, transparent);
+    background: var(--color-white);
     color: var(--color-deep-gold);
+  }
+  /* Plain mono label (no pill), for small labels such as the scroll cue. */
+  .label-mono {
+    font-family: var(--font-mono);
+    font-weight: 500;
+    font-size: var(--text-eyebrow);
+    line-height: var(--text-eyebrow--line-height);
+    letter-spacing: var(--text-eyebrow--letter-spacing);
+    text-transform: uppercase;
+  }
+
+  /*
+   * Anchor arrival: the target heading's gold underline grows and fades (1200ms, runTiming).
+   * brightGold on dark, deepGold on light.
+   */
+  [data-anchor-highlight] {
+    --anchor-line: var(--color-bright-gold);
+    background-image: linear-gradient(
+      color-mix(in srgb, var(--anchor-line) var(--anchor-alpha), transparent),
+      color-mix(in srgb, var(--anchor-line) var(--anchor-alpha), transparent)
+    );
+    background-repeat: no-repeat;
+    background-position: left bottom;
+    animation: anchor-underline 1200ms var(--ease-out-expo) both;
+  }
+  .surface-light [data-anchor-highlight] {
+    --anchor-line: var(--color-deep-gold);
+  }
+
+  /* Headline glow (hero h1 and CTA headline only; never body text or the gradient word). */
+  .text-glow-gold {
+    text-shadow: 0 0 40px color-mix(in srgb, var(--color-bright-gold) 25%, transparent);
+  }
+
+  /*
+   * Card system top bar: a 2px brightGold to pioneerGold bar along the top edge that grows from
+   * the left on hover (fine pointers) and on focus within. Put `card-topbar` on a positioned card
+   * with overflow hidden or a matching radius.
+   */
+  .card-topbar {
+    position: relative;
+  }
+  .card-topbar::before {
+    content: "";
+    position: absolute;
+    inset-inline: 0;
+    top: 0;
+    height: 2px;
+    background-image: linear-gradient(90deg, var(--color-bright-gold), var(--color-pioneer-gold));
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 300ms var(--ease-out-expo);
+    pointer-events: none;
+    z-index: 1;
+  }
+  .card-topbar:focus-within::before {
+    transform: scaleX(1);
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .card-topbar:hover::before {
+      transform: scaleX(1);
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .card-topbar::before {
+      transition: none;
+    }
+  }
+  [data-reduce-motion="true"] .card-topbar::before {
+    transition: none;
   }
 
   /* The single allowed gradient text: "Intelligence" in the hero, brightGold to pioneerGold. */
@@ -544,4 +626,25 @@
 }
 html[data-reduce-motion="true"] .motion-loop {
   animation: none !important;
+}
+
+/* Anchor arrival underline: grows from the left, then fades. */
+@property --anchor-alpha {
+  syntax: "<percentage>";
+  inherits: false;
+  initial-value: 0%;
+}
+@keyframes anchor-underline {
+  0% {
+    background-size: 0% 3px;
+    --anchor-alpha: 100%;
+  }
+  45% {
+    background-size: 100% 3px;
+    --anchor-alpha: 100%;
+  }
+  100% {
+    background-size: 100% 3px;
+    --anchor-alpha: 0%;
+  }
 }

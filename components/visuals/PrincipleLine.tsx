@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { motion } from "motion/react";
+import { TiltCard } from "@/components/ui/TiltCard";
 import { VerifyMarker } from "@/components/ui/VerifyMarker";
 import { mediaQueries, useMediaQuery } from "@/hooks/useMediaQuery";
 import { useReducedMotionPreference } from "@/hooks/useReducedMotionPreference";
@@ -21,7 +22,7 @@ export interface PrincipleLineProps {
 }
 
 /**
- * A 1px line through four nodes. The line is scrubbed with scroll by GSAP ScrollTrigger
+ * A 1px line through four nodes, each above a principle card (card system). The line is scrubbed with scroll by GSAP ScrollTrigger
  * (loaded lazily); each node lights up with Motion when the line reaches it. Horizontal at
  * lg, vertical on the left below lg. Reduced motion shows everything at once.
  */
@@ -131,10 +132,7 @@ export function PrincipleLine({ items }: PrincipleLineProps) {
           return (
             <li
               key={item.id}
-              className={cn(
-                "relative",
-                horizontal ? "flex flex-col items-center text-center" : "pl-12",
-              )}
+              className={cn("relative", horizontal ? "flex flex-col items-center" : "pl-12")}
             >
               <motion.span
                 aria-hidden="true"
@@ -155,20 +153,16 @@ export function PrincipleLine({ items }: PrincipleLineProps) {
                 initial={false}
                 animate={{ opacity: lit ? 1 : 0, y: lit ? 0 : distance.mobileRise }}
                 transition={{ duration: s(timing.nodeActivate), ease: ease.outExpo }}
-                className={horizontal ? "mt-8" : ""}
+                className={cn(horizontal && "mt-6 w-full flex-1")}
               >
-                <VerifyMarker verified={item.verified}>
-                  <p className="font-mono text-small text-slate-400">{item.index}</p>
-                  <h3 className="mt-2 font-display text-h4 text-cloud-50">{item.title}</h3>
-                  <p
-                    className={cn(
-                      "mt-2 text-body text-slate-400",
-                      horizontal && "mx-auto max-w-[28ch]",
-                    )}
-                  >
-                    {item.text}
-                  </p>
-                </VerifyMarker>
+                {/* Principle card (card system): left aligned text, design audit issue 29. */}
+                <TiltCard tone="dark" className="text-left">
+                  <VerifyMarker verified={item.verified}>
+                    <p className="font-mono text-small text-slate-400">{item.index}</p>
+                    <h3 className="mt-2 font-display text-h4 text-cloud-50">{item.title}</h3>
+                    <p className="mt-2 text-body text-slate-400">{item.text}</p>
+                  </VerifyMarker>
+                </TiltCard>
               </motion.div>
             </li>
           );

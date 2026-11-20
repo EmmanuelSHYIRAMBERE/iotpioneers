@@ -27,7 +27,8 @@ export interface NavItem {
   external: boolean;
 }
 
-export type SectionId = "top" | "about" | "solutions" | "iotdatahub" | "shop" | "why" | "contact";
+export type SectionId =
+  "top" | "about" | "solutions" | "iotdatahub" | "shop" | "paths" | "why" | "contact";
 
 export interface ProductEntry extends Verifiable {
   id: "iotdatahub" | "shop";
@@ -83,7 +84,10 @@ export interface ProductImage {
 
 export interface ProductHighlight extends Verifiable {
   id: string;
+  /** Full shop title, used in the link's accessible name (audit issue 28). */
   name: string;
+  /** Short display name shown on the card (audit issue 28). Falls back to `name`. */
+  displayName?: string;
   categoryId: string;
   /** Null until the client grants permission to reuse shop photography. */
   image: ProductImage | null;
@@ -164,3 +168,56 @@ export type AsyncState<T> =
   | { status: "ready"; data: T }
   | { status: "empty" }
   | { status: "error"; message: string };
+
+/* -------------------------------------------------------------------------------------------
+ * Completion run types.
+ * ----------------------------------------------------------------------------------------- */
+
+/**
+ * A stand-in photograph (imagery-stand-ins skill). `src` is null until the file exists in
+ * public/images/; components then keep their line drawing. Always `verified: false`.
+ */
+export interface StockImage extends Verifiable {
+  src: string | null;
+  /** Describes what is shown. Empty string for decorative background photos. */
+  alt: string;
+  width: number;
+  height: number;
+  /** Unsplash photographer and photo page, for the credits register. */
+  photographer: string | null;
+  sourceUrl: string | null;
+  /** Shop category images: render the visible "Illustrative image" label. */
+  illustrative: boolean;
+}
+
+export type ValueStripIcon = "engineering" | "datahub" | "shop";
+
+/** One item of the three-item value strip under the hero. */
+export interface ValueStripItem extends Verifiable {
+  id: "engineering" | "iotdatahub" | "shop";
+  title: string;
+  text: string;
+  icon: ValueStripIcon;
+  href: `#${SectionId}`;
+  /** Visible link text. */
+  linkLabel: string;
+  /** Accessible name naming the destination, for example "See IoTDataHub". */
+  linkAccessibleName: string;
+}
+
+export interface PathNeed {
+  id: string;
+  label: string;
+}
+
+/** A column of the "Which do you need?" table: one of IoT Pioneers' own offerings. */
+export interface PathOffering extends Verifiable {
+  id: "engineering" | "iotdatahub" | "shop";
+  name: string;
+  /** Need ids this offering serves. */
+  serves: readonly string[];
+  ctaLabel: string;
+  ctaAccessibleName: string;
+  href: string;
+  external: boolean;
+}

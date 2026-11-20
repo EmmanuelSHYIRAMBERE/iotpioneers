@@ -1,8 +1,10 @@
 "use client";
 
 import { useEffect, useRef, useState, type KeyboardEvent } from "react";
+import Image from "next/image";
 import { AnimatePresence, motion } from "motion/react";
 import { ArrowRight, Minus, Plus } from "lucide-react";
+import { solutionImages } from "@/content/images";
 import type { Solution } from "@/content/types";
 import { VerifyMarker } from "@/components/ui/VerifyMarker";
 import { SolutionIllustration } from "@/components/visuals/SolutionIllustrations";
@@ -190,15 +192,26 @@ export function SolutionsIndexClient({ solutions }: SolutionsIndexClientProps) {
         <div className="hidden lg:col-span-5 lg:col-start-8 lg:block">
           <div
             ref={panelRef}
-            className="bg-dot-grid sticky top-[120px] aspect-[4/3] overflow-hidden rounded-card border border-slate-200 bg-cloud-50 p-8"
+            className="bg-dot-grid sticky top-[120px] aspect-[4/3] overflow-hidden rounded-card border border-slate-200 bg-cloud-50 px-6 pt-12 pb-6"
           >
-            <p className="absolute top-5 left-6 font-mono text-small text-slate-600">
+            {/* Stand-in photo behind the drawing at 15% opacity (decorative, imagery-stand-ins). */}
+            {solutionImages[shown.id]?.src ? (
+              <Image
+                key={`photo-${shown.id}`}
+                src={solutionImages[shown.id]?.src ?? ""}
+                alt=""
+                fill
+                sizes="(min-width: 1280px) 520px, 40vw"
+                className="pointer-events-none object-cover opacity-15"
+              />
+            ) : null}
+            <p className="absolute top-5 left-6 z-10 rounded-tag bg-cloud-50 px-1 font-mono text-small text-slate-600">
               FIG. {shown.index} · {shown.title.toUpperCase()}
             </p>
             <AnimatePresence mode="wait" initial={false}>
               <motion.div
                 key={shown.id}
-                className="h-full w-full pt-6"
+                className="relative h-full w-full"
                 initial={{ opacity: 1 }}
                 exit={{
                   opacity: 0,

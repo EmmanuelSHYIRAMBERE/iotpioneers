@@ -8,19 +8,14 @@ import { mediaQueries, useMediaQuery } from "@/hooks/useMediaQuery";
 import { usePageVisibility } from "@/hooks/usePageVisibility";
 import { useReducedMotionPreference } from "@/hooks/useReducedMotionPreference";
 import { cn } from "@/lib/cn";
-import { timing } from "@/lib/motion";
+import { marqueeSpeed, timing } from "@/lib/motion";
 import { ICON_STROKE } from "@/lib/tokens";
 
 export interface TechnologyMarqueeProps {
   label: string;
   items: readonly string[];
   verified: boolean;
-  /** Pixels per second: desktop and mobile. */
-  speed?: { desktop: number; mobile: number };
-  direction?: "left" | "right";
 }
-
-const HOVER_RATE = 0.25;
 
 function NodeGlyph() {
   return (
@@ -68,33 +63,41 @@ function ItemList({
 }
 
 /**
- * Signal strip of the company's areas of work. Right to left at a constant pixel speed, slows to
- * 25% on hover (eased over 400ms), pauses on focus, off screen, when the tab is hidden and with
- * the visible toggle. Reduced motion shows a static wrapped list. Screen readers read it once.
+ * One marquee row: a constant pixel speed Web Animation built from the measured width.
+ * Hover eases this row's playback rate to 25% over 400ms.
  */
-export function TechnologyMarquee({
-  label,
+function MarqueeRow({
   items,
-  verified,
-  speed = { desktop: 40, mobile: 28 },
-  direction = "left",
-}: TechnologyMarqueeProps) {
-  const bandRef = useRef<HTMLDivElement>(null);
+  label,
+  direction,
+  pxPerSecond,
+  running,
+  exposed,
+}: {
+  items: readonly string[];
+  label: string;
+  direction: "left" | "right";
+  pxPerSecond: number;
+  running: boolean;
+  /** Only the first row is exposed to assistive technology. */
+  exposed: boolean;
+}) {
   const trackRef = useRef<HTMLDivElement>(null);
   const animationRef = useRef<Animation | null>(null);
+  const runningRef = useRef(running);
   const rateFrame = useRef(0);
-  const [userPaused, setUserPaused] = useState(false);
-  const [focusPaused, setFocusPaused] = useState(false);
-  const reduced = useReducedMotionPreference();
-  const inView = useInView(bandRef);
-  const pageVisible = usePageVisibility();
-  const desktop = useMediaQuery(mediaQueries.md, true);
-  const pxPerSecond = desktop ? speed.desktop : speed.mobile;
 
-  // Build the animation from the measured width so the speed is constant in pixels.
+  useEffect(() => {
+    runningRef.current = running;
+    const animation = animationRef.current;
+    if (!animation) return;
+    if (running) animation.play();
+    else animation.pause();
+  }, [running]);
+
   useEffect(() => {
     const track = trackRef.current;
-    if (!track || reduced) return;
+    if (!track) return;
     const build = (): void => {
       const half = track.scrollWidth / 2;
       if (half <= 0) return;
@@ -115,6 +118,7 @@ export function TechnologyMarquee({
         easing: "linear",
       });
       animation.currentTime = progress * durationMs;
+      if (!runningRef.current) animation.pause();
       animationRef.current = animation;
     };
     build();
@@ -122,18 +126,11 @@ export function TechnologyMarquee({
     observer.observe(track);
     return () => {
       observer.disconnect();
+      cancelAnimationFrame(rateFrame.current);
       animationRef.current?.cancel();
       animationRef.current = null;
     };
-  }, [reduced, pxPerSecond, direction]);
-
-  const running = !reduced && !userPaused && !focusPaused && inView && pageVisible;
-  useEffect(() => {
-    const animation = animationRef.current;
-    if (!animation) return;
-    if (running) animation.play();
-    else animation.pause();
-  }, [running, reduced, pxPerSecond]);
+  }, [pxPerSecond, direction]);
 
   // Ease the playback rate rather than stopping abruptly.
   const easeRate = (target: number): void => {
@@ -149,17 +146,38 @@ export function TechnologyMarquee({
     };
     rateFrame.current = requestAnimationFrame(step);
   };
-
-  useEffect(
-    () => () => {
-      cancelAnimationFrame(rateFrame.current);
-    },
-    [],
-  );
-
   const onHover = (on: boolean): void => {
-    easeRate(on ? HOVER_RATE : 1);
+    easeRate(on ? marqueeSpeed.hoverFactor : 1);
   };
+
+  return (
+    <div className="flex h-12 items-center md:h-16" aria-hidden={exposed ? undefined : true}>
+      <div ref={trackRef} className="flex w-max will-change-transform" data-marquee-row={direction}>
+        <ItemList items={items} label={label} hidden={!exposed} onHover={onHover} />
+        <ItemList items={items} label={label} hidden onHover={onHover} />
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Signal strip of the company's areas of work, in two rows on the brightGold band: the top row
+ * moves right to left at 40px/s and the bottom row left to right at 32px/s (half speed on
+ * phones). Each row slows to 25% on hover; both pause on focus, off screen, in a hidden tab and
+ * with the visible toggle. Reduced motion shows both rows as static wrapped lines. Screen readers
+ * read the list once: the second row repeats the items in reverse order and is hidden from them.
+ */
+export function TechnologyMarquee({ label, items, verified }: TechnologyMarqueeProps) {
+  const bandRef = useRef<HTMLDivElement>(null);
+  const [userPaused, setUserPaused] = useState(false);
+  const [focusPaused, setFocusPaused] = useState(false);
+  const reduced = useReducedMotionPreference();
+  const inView = useInView(bandRef);
+  const pageVisible = usePageVisibility();
+  const desktop = useMediaQuery(mediaQueries.md, true);
+  const scale = desktop ? 1 : 0.5;
+  const reversed = [...items].reverse();
+  const running = !reduced && !userPaused && !focusPaused && inView && pageVisible;
 
   return (
     <div
@@ -174,27 +192,43 @@ export function TechnologyMarquee({
     >
       <VerifyMarker verified={verified} className="relative">
         {reduced ? (
-          <div className="container-page py-6">
-            <ul
-              aria-label={label}
-              className="flex flex-wrap items-center justify-center gap-x-6 gap-y-3 pr-12"
-            >
-              {items.map((item) => (
-                <li key={item} className="flex items-center gap-6">
-                  <span className="font-display text-[clamp(1.25rem,1rem+1vw,1.75rem)] font-semibold text-navy-950">
-                    {item}
-                  </span>
-                  <NodeGlyph />
-                </li>
-              ))}
-            </ul>
+          <div className="container-page flex flex-col gap-3 py-6">
+            {[items, reversed].map((row, index) => (
+              <ul
+                key={index === 0 ? "top" : "bottom"}
+                aria-label={index === 0 ? label : undefined}
+                aria-hidden={index === 0 ? undefined : true}
+                className="flex flex-wrap items-center justify-center gap-x-6 gap-y-3 pr-12"
+              >
+                {row.map((item) => (
+                  <li key={item} className="flex items-center gap-6">
+                    <span className="font-display text-[clamp(1.25rem,1rem+1vw,1.75rem)] font-semibold text-navy-950">
+                      {item}
+                    </span>
+                    <NodeGlyph />
+                  </li>
+                ))}
+              </ul>
+            ))}
           </div>
         ) : (
-          <div className="flex h-16 items-center md:h-24">
-            <div ref={trackRef} className="flex w-max will-change-transform">
-              <ItemList items={items} label={label} onHover={onHover} />
-              <ItemList items={items} label={label} hidden onHover={onHover} />
-            </div>
+          <div className="flex flex-col py-2 md:py-3">
+            <MarqueeRow
+              items={items}
+              label={label}
+              direction="left"
+              pxPerSecond={marqueeSpeed.topPxPerSecond * scale}
+              running={running}
+              exposed
+            />
+            <MarqueeRow
+              items={reversed}
+              label={label}
+              direction="right"
+              pxPerSecond={marqueeSpeed.bottomPxPerSecond * scale}
+              running={running}
+              exposed={false}
+            />
           </div>
         )}
       </VerifyMarker>
@@ -210,7 +244,7 @@ export function TechnologyMarquee({
             "absolute top-1/2 right-2 z-10 flex size-11 -translate-y-1/2 items-center justify-center rounded-full text-navy-950 [--focus-ring:var(--color-navy-950)] md:right-4",
           )}
         >
-          <span className="flex size-6 items-center justify-center rounded-full bg-navy-950/40">
+          <span className="flex size-7 items-center justify-center rounded-full bg-bright-gold ring-1 ring-navy-950">
             {userPaused ? (
               <Play aria-hidden="true" size={12} strokeWidth={ICON_STROKE} />
             ) : (

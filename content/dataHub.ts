@@ -27,7 +27,8 @@ export const dataHub = {
       "iotdatahub.rw footer names IOT PIONEERS Ltd; client to confirm how ownership is stated",
   } satisfies VerifiableText,
   cta: { label: "Explore IoTDataHub", href: "https://www.iotdatahub.rw/" },
-  howItWorksLabel: "How it works",
+  /** Names its destination (the demo below), not a bare "How it works" (audit issue 27). */
+  howItWorksLabel: "See how IoTDataHub works",
   /** Navigation terms used inside the stylised demo. "Devices" and "channels" appear on the live site. */
   sidebarTerms: {
     items: ["Overview", "Devices", "Channels", "Dashboards", "Alerts"],
@@ -35,7 +36,6 @@ export const dataHub = {
     source:
       "Neutral terms from specification; 'devices', 'channels', 'dashboards' and 'alerts' appear on iotdatahub.rw",
   } satisfies Verifiable & { items: readonly string[] },
-  endNote: "Dashboard shown with simulated data for illustration.",
   demoCaption:
     "Stylised representation of IoTDataHub. Dashboard shown with simulated data for illustration.",
   demoBadge: {

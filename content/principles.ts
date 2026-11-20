@@ -5,6 +5,9 @@ const SOURCE = "Provisional copy from specification section 9.08; client to conf
 export const whyHeading = {
   eyebrow: "WHY IoT PIONEERS",
   title: "Why work with IoT Pioneers",
+  /** One sentence under the centred title (design audit issue 29). Neutral: no claims or numbers. */
+  intro:
+    "Four principles shape how we approach every project, from the first sensor to the finished software.",
   verified: false,
   source: SOURCE,
 } as const satisfies Verifiable & Record<string, unknown>;

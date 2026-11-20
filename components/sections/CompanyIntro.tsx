@@ -15,7 +15,7 @@ export function CompanyIntro() {
       className="surface-light section-pad bg-cloud-50 text-navy-950"
     >
       <div className="container-page grid-page gap-y-16">
-        <div className="col-span-full md:col-span-8 lg:order-2 lg:col-span-6 lg:col-start-7">
+        <div className="col-span-full md:col-span-8 lg:order-2 lg:col-span-6 lg:col-start-7 lg:pt-4">
           <IntroImages
             large={about.images.large}
             small={about.images.small}
@@ -24,13 +24,14 @@ export function CompanyIntro() {
           />
         </div>
 
-        <div className="col-span-full md:col-span-7 lg:order-1 lg:col-span-5 lg:col-start-1 lg:row-start-1">
+        <div className="col-span-full md:col-span-7 lg:order-1 lg:col-span-6 lg:col-start-1 lg:row-start-1">
           <p className="eyebrow">{about.eyebrow}</p>
+          {/* At most 4 lines at 1440px (design audit issue 14): 6 of 12 columns, capped at 56px. */}
           <VerifyMarker verified={about.statement.verified} className="mt-4">
             <div id="about-title">
               <StatementReveal
                 lines={about.statement.lines}
-                className="font-display text-[2rem] leading-[1.08] font-semibold tracking-[-0.025em] text-navy-950 md:text-display-l"
+                className="font-display text-[clamp(2rem,1.25rem+2vw,3.5rem)] leading-[1.08] font-semibold tracking-[-0.025em] text-navy-950"
               />
             </div>
           </VerifyMarker>

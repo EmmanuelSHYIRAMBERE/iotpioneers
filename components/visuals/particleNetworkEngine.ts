@@ -29,13 +29,20 @@ export interface NetworkOptions {
   seed: number;
   /** Cap at 30 FPS (low core count devices). */
   lowPower: boolean;
+  /**
+   * Faint background layer (hero behind the globe): few nodes, no pulses, half opacity, so the
+   * globe stays the only strong focal point.
+   */
+  faint?: boolean;
 }
 
 /** Node counts and link distances by viewport (desktop, tablet, mobile). */
 export function densityFor(
   width: number,
   mode: NetworkMode,
+  faint = false,
 ): { count: number; linkDistance: number } {
+  if (faint) return { count: width < 768 ? 16 : 25, linkDistance: width < 768 ? 110 : 170 };
   if (mode === "converge")
     return { count: width < 768 ? 28 : 40, linkDistance: width < 768 ? 100 : 140 };
   if (width < 768) return { count: 28, linkDistance: 100 };
@@ -59,6 +66,7 @@ const ENTRANCE = 1200;
 const CENTRE_RADIUS = 6;
 const CENTRE_GLOW = 48;
 const CENTRE_PULSE = 2400;
+const FAINT_ALPHA = 0.5;
 
 const SLATE = hexToRgb(colors.slate400);
 const CYAN = hexToRgb(colors.cyan400);
@@ -125,6 +133,8 @@ export class ParticleNetworkEngine {
   private rippleStart = -1;
 
   private calm: CalmRect | null = null;
+  /** Converge target in CSS pixels; null means the canvas centre. */
+  private focus: { x: number; y: number } | null = null;
   private startedAt = -1;
   private lastFrame = 0;
   private frameId = 0;
@@ -158,6 +168,20 @@ export class ParticleNetworkEngine {
 
   setCalmRect(rect: CalmRect | null): void {
     this.calm = rect;
+  }
+
+  /** Converge mode: the point the network flows into (audit issue 30: below the button row). */
+  setFocusPoint(point: { x: number; y: number } | null): void {
+    this.focus = point;
+    if (!this.running) this.draw(performance.now());
+  }
+
+  private convergeX(): number {
+    return this.focus?.x ?? this.width / 2;
+  }
+
+  private convergeY(): number {
+    return this.focus?.y ?? this.height / 2;
   }
 
   setPointer(x: number, y: number, active: boolean): void {
@@ -282,8 +306,8 @@ export class ParticleNetworkEngine {
 
   private update(dt: number, now: number): void {
     const { width: w, height: h, count } = this;
-    const cx = w / 2;
-    const cy = h / 2;
+    const cx = this.convergeX();
+    const cy = this.convergeY();
     const converge = this.options.mode === "converge";
     const topBand = this.options.layout === "top" ? h * 0.5 : h;
 
@@ -329,7 +353,7 @@ export class ParticleNetworkEngine {
     this.parallaxY += (this.parallaxTargetY - this.parallaxY) * LERP;
     this.onFrame?.(this.parallaxX, this.parallaxY);
 
-    if (!converge && now - this.lastPulseAt > PULSE_EVERY) {
+    if (!converge && !this.options.faint && now - this.lastPulseAt > PULSE_EVERY) {
       this.lastPulseAt = now;
       this.spawnPulse(now);
     }
@@ -381,8 +405,10 @@ export class ParticleNetworkEngine {
     // Entrance: nodes expand from 70% of their spread to 100% over 1.2s.
     const t = this.staticMode ? 1 : easeOutExpo(Math.min(1, (now - this.startedAt) / ENTRANCE));
     const spread = this.options.mode === "ambient" ? 0.7 + 0.3 * t : 1;
-    const cx = w / 2;
-    const cy = this.options.layout === "top" ? h * 0.22 : h / 2;
+    const converge = this.options.mode === "converge";
+    const cx = converge ? this.convergeX() : w / 2;
+    const cy = converge ? this.convergeY() : this.options.layout === "top" ? h * 0.22 : h / 2;
+    const dim = this.options.faint ? FAINT_ALPHA : 1;
 
     for (let i = 0; i < count; i += 1) {
       this.px[i] = cx + ((this.x[i] ?? 0) - cx) * spread + (this.ox[i] ?? 0);
@@ -441,9 +467,14 @@ export class ParticleNetworkEngine {
       for (let i = 0; i < count; i += 1) {
         const d = Math.hypot((this.px[i] ?? 0) - cx, (this.py[i] ?? 0) - cy);
         if (d < limit * 1.4) {
+          const midX = ((this.px[i] ?? 0) + cx) / 2;
+          const midY = ((this.py[i] ?? 0) + cy) / 2;
           ctx.strokeStyle = style(
             CYAN_STYLES,
-            0.28 * (1 - d / (limit * 1.4)) * (this.fade[i] ?? 1),
+            Math.min(
+              0.28 * (1 - d / (limit * 1.4)) * (this.fade[i] ?? 1),
+              this.nodeAlphaCap(midX, midY),
+            ),
           );
           ctx.beginPath();
           ctx.moveTo(this.px[i] ?? 0, this.py[i] ?? 0);
@@ -461,7 +492,7 @@ export class ParticleNetworkEngine {
       const isSignal = this.signal[i] === 1;
       let alpha = (isSignal ? 0.9 : NODE_ALPHA) * (this.fade[i] ?? 1);
       if (this.options.layout === "top") alpha *= Math.max(0, 1 - ny / (h * 0.5));
-      ctx.fillStyle = style(isSignal ? CYAN_STYLES : SLATE_STYLES, Math.min(alpha, cap));
+      ctx.fillStyle = style(isSignal ? CYAN_STYLES : SLATE_STYLES, Math.min(alpha, cap) * dim);
       ctx.beginPath();
       ctx.arc(nx, ny, this.radius[i] ?? 1, 0, Math.PI * 2);
       ctx.fill();
@@ -521,6 +552,7 @@ export class ParticleNetworkEngine {
         BASE_LINK_ALPHA + (BRIGHT_LINK_ALPHA - BASE_LINK_ALPHA) * (1 - rippleAge / RIPPLE_DURATION);
     }
     let alpha = maxAlpha * (1 - d / limit) * Math.min(this.fade[i] ?? 1, this.fade[j] ?? 1);
+    if (this.options.faint) alpha *= FAINT_ALPHA;
     alpha = Math.min(alpha, this.nodeAlphaCap(mx, my));
     if (this.options.layout === "top") alpha *= Math.max(0, 1 - my / (this.height * 0.5));
     if (alpha < 0.01) return;

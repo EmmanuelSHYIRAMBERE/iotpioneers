@@ -10,6 +10,8 @@ export const navItems: readonly NavItem[] = [
   { label: "About", href: "#about", external: false },
   { label: "Solutions", href: "#solutions", external: false },
   { label: "Products", href: "#iotdatahub", external: false },
+  /** "Which do you need?" (section id "paths"), between Shop and Why in the page order. */
+  { label: "Choose", href: "#paths", external: false },
   { label: "Contact", href: "#contact", external: false },
 ];
 
@@ -41,6 +43,7 @@ export const primaryCta = { label: "Start a Project", href: "#contact" } as cons
 export const footerCompanyLinks: readonly NavItem[] = [
   { label: "About", href: "#about", external: false },
   { label: "Solutions", href: "#solutions", external: false },
+  { label: "Which do you need?", href: "#paths", external: false },
   { label: "Why IoT Pioneers", href: "#why", external: false },
   { label: "Contact", href: "#contact", external: false },
 ];

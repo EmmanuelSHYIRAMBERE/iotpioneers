@@ -154,6 +154,7 @@ export function IoTDashboardPreview({
       color: colors.cyan400,
       decimals: 1,
       readings: temperature,
+      unit: "°C",
       visible: view === "temperature" || view === "both",
     },
     {
@@ -162,6 +163,8 @@ export function IoTDashboardPreview({
       color: colors.blue400,
       decimals: 0,
       readings: humidity,
+      unit: "%",
+      dashed: true,
       visible: view === "humidity" || view === "both",
     },
   ];
@@ -309,7 +312,7 @@ export function IoTDashboardPreview({
         drawn={chartDrawn}
         instant={reduced}
         rangeKey={range}
-        className={layout === "mobile" ? "h-48" : "min-h-24 flex-1"}
+        className={layout === "mobile" ? "h-48" : "h-56 xl:h-auto xl:min-h-24 xl:flex-1"}
       />
     </Region>
   );
@@ -321,7 +324,9 @@ export function IoTDashboardPreview({
       className="flex min-h-0 flex-col rounded-card bg-navy-900 p-2 shadow-highlight lg:p-3"
     >
       <p className="mb-1 px-2 font-mono text-small text-slate-400">Devices</p>
-      <div className="min-h-0 flex-1 overflow-y-auto">
+      {/* Below xl the frame grows with its content and the list shows at least three devices
+          (audit follow-up: devices panel at 900px). */}
+      <div className="max-h-72 min-h-0 flex-1 overflow-y-auto xl:max-h-none">
         <DeviceList devices={listDevices} now={now} />
       </div>
     </Region>
@@ -370,13 +375,15 @@ export function IoTDashboardPreview({
     >
       {/* minmax(0, ...) lets every column shrink below its content width; plain 1fr does not,
           which pushed the frame past its container (audit issue 18). */}
-      <div className="grid h-full min-h-0 grid-cols-[56px_minmax(0,1fr)] xl:grid-cols-[200px_minmax(0,1fr)]">
+      <div className="grid min-h-0 grid-cols-[56px_minmax(0,1fr)] xl:h-full xl:grid-cols-[200px_minmax(0,1fr)]">
         <DashboardSidebar items={labels.sidebar} />
         <div className="flex min-h-0 min-w-0 flex-col gap-3 p-3 xl:p-4">
           {cards}
-          <div className="grid min-h-0 flex-1 grid-cols-[minmax(0,1.45fr)_minmax(0,1fr)] gap-3">
+          {/* xl: chart beside devices and alerts inside the 16:10 frame. Below xl: chart full width,
+              then devices and alerts side by side at their natural height. */}
+          <div className="grid gap-3 xl:min-h-0 xl:flex-1 xl:grid-cols-[minmax(0,1.45fr)_minmax(0,1fr)]">
             {chart}
-            <div className="flex min-h-0 flex-col gap-3">
+            <div className="grid gap-3 md:grid-cols-2 md:items-start xl:flex xl:min-h-0 xl:flex-col">
               {devicesPanel}
               {alertsPanel}
             </div>
@@ -418,7 +425,7 @@ function DesktopFrame({
         <div
           role="group"
           aria-label="IoTDataHub demo dashboard with simulated data"
-          className="relative aspect-[16/10] w-full overflow-hidden rounded-frame border border-line-dark bg-navy-950 shadow-highlight"
+          className="relative w-full overflow-hidden rounded-frame border border-line-dark bg-navy-950 shadow-highlight xl:aspect-[16/10]"
         >
           <div className="flex h-10 items-center gap-3 border-b border-line-dark bg-navy-900 px-4">
             <span aria-hidden="true" className="flex gap-1.5">
@@ -431,7 +438,7 @@ function DesktopFrame({
             </span>
             <span className="w-12" aria-hidden="true" />
           </div>
-          <div className="h-[calc(100%-40px)]">{children}</div>
+          <div className="xl:h-[calc(100%-40px)]">{children}</div>
         </div>
 
         {/* Persistent demo badge, pinned to the top right of the frame at every step. */}

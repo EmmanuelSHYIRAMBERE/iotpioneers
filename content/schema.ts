@@ -13,6 +13,15 @@ export const verifiableSchema = z.object({
 /** Visible copy must never contain the internal placeholder syntax (audit issue 12). */
 const noPlaceholder = (value: string): boolean => !value.includes("[VERIFY:");
 
+/** A visible string field that must not contain the placeholder syntax. */
+const visibleString = z
+  .string()
+  .min(1)
+  .refine(
+    noPlaceholder,
+    "Visible copy must not contain [VERIFY: ...]; use draft copy and a todo note",
+  );
+
 export const verifiableTextSchema = verifiableSchema.extend({ text: z.string().min(1) });
 export const visibleTextSchema = verifiableSchema.extend({
   text: z
@@ -126,6 +135,17 @@ export const featureSchema = verifiableSchema.extend({
   icon: z.enum(["plug", "activity", "chart", "layers", "bell"]),
 });
 
+/** Stand-in photographs (content/images.ts). */
+const stockImageSchema = verifiableSchema.extend({
+  src: z.string().startsWith("/images/").nullable(),
+  alt: z.string().refine(noPlaceholder, "Alt text must not contain [VERIFY: ...]"),
+  width: z.number().int().positive(),
+  height: z.number().int().positive(),
+  photographer: z.string().nullable(),
+  sourceUrl: z.string().url().nullable(),
+  illustrative: z.boolean(),
+});
+
 /** Schemas for each content export, keyed "file.export". Exports without an entry are walked but not shape checked. */
 export const contentSchemas: Record<string, z.ZodType> = {
   "navigation.navItems": z.array(navItemSchema).min(1),
@@ -137,6 +157,57 @@ export const contentSchemas: Record<string, z.ZodType> = {
   "shopHighlights.shopAudiences": z.array(shopAudienceSchema),
   "principles.principles": z.array(principleSchema).length(4),
   "contact.contact": contactDetailsSchema,
+  "images.solutionImages": z.record(z.string(), stockImageSchema),
+  "images.whyBandImage": stockImageSchema,
+  "images.ctaImage": stockImageSchema,
+  "images.shopCategoryImages": z.record(
+    z.string(),
+    stockImageSchema.refine(
+      (image) => image.illustrative && image.alt.startsWith("Illustrative image"),
+      "Shop images must be labelled as illustrative",
+    ),
+  ),
+  "principles.whyHeading": verifiableSchema.extend({
+    eyebrow: z.string().min(1),
+    title: z.string().min(1),
+    intro: visibleString,
+  }),
+  "hero.valueStrip": z
+    .array(
+      verifiableSchema.extend({
+        id: z.enum(["engineering", "iotdatahub", "shop"]),
+        title: visibleString,
+        text: visibleString,
+        icon: z.enum(["engineering", "datahub", "shop"]),
+        href: z.string().startsWith("#"),
+        linkLabel: z.string().min(1),
+        linkAccessibleName: z.string().min(1),
+      }),
+    )
+    .length(3),
+  "hero.valueStripTitle": z.string().min(1),
+  "pathTable.pathHeading": verifiableSchema.extend({
+    eyebrow: z.string().min(1),
+    title: z.string().min(1),
+    lead: visibleString,
+    caption: z.string().min(1),
+    needsHeader: z.string().min(1),
+    ctaRowLabel: z.string().min(1),
+  }),
+  "pathTable.pathNeeds": z.array(z.object({ id: z.string(), label: z.string().min(1) })).length(3),
+  "pathTable.pathOfferings": z
+    .array(
+      verifiableSchema.extend({
+        id: z.enum(["engineering", "iotdatahub", "shop"]),
+        name: z.string().min(1),
+        serves: z.array(z.string()),
+        ctaLabel: z.string().min(1),
+        ctaAccessibleName: z.string().min(1),
+        href: z.string().min(1),
+        external: z.boolean(),
+      }),
+    )
+    .length(3),
   "social.socialLinks": z.array(socialLinkSchema),
   "site.site": z.object({
     name: verifiableTextSchema,

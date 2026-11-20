@@ -19,9 +19,10 @@ export interface CategoryTabsProps {
 }
 
 /**
- * Horizontal tab list (WAI-ARIA tabs, automatic activation). Arrow keys move between tabs,
- * Home and End jump. The deepGold underline slides between tabs. Scrolls sideways with fade masks
- * on small screens.
+ * Pill filters with the WAI-ARIA tabs pattern (automatic activation, roving tabindex). Arrow keys
+ * move between pills, Home and End jump. From md the pills wrap onto more lines, so no category
+ * is ever cut off (audit issue 25); on phones they scroll sideways with edge fades. Selected:
+ * brightGold with navy text (9.01:1). Default: white, slate200 border, slate600 text (7.58:1).
  */
 export function CategoryTabs({ tabs, value, onChange, panelId, idPrefix }: CategoryTabsProps) {
   const refs = useRef<(HTMLButtonElement | null)[]>([]);
@@ -51,47 +52,48 @@ export function CategoryTabs({ tabs, value, onChange, panelId, idPrefix }: Categ
   };
 
   return (
-    <div className="relative">
-      <div
-        role="tablist"
-        aria-label="Product categories"
-        className="no-scrollbar -mx-5 flex gap-1 overflow-x-auto border-b border-slate-200 [mask-image:linear-gradient(to_right,transparent,#000_20px,#000_calc(100%-20px),transparent)] px-5 sm:-mx-6 sm:px-6 lg:mx-0 lg:[mask-image:none] lg:px-0"
-      >
-        {tabs.map((tab, i) => {
-          const selected = tab.id === value;
-          return (
-            <button
-              key={tab.id}
-              ref={(node) => {
-                refs.current[i] = node;
-              }}
-              id={`${idPrefix}-${tab.id}`}
-              type="button"
-              role="tab"
-              aria-selected={selected}
-              aria-controls={panelId}
-              tabIndex={selected ? 0 : -1}
-              onClick={() => {
-                onChange(tab.id);
-              }}
-              onKeyDown={onKeyDown}
-              className={cn(
-                "relative min-h-12 shrink-0 px-3 font-display text-[0.9375rem] font-medium whitespace-nowrap transition-colors duration-200",
-                selected ? "text-navy-950" : "text-slate-600 hover:text-navy-950",
-              )}
-            >
-              {tab.label}
-              {selected ? (
-                <motion.span
-                  layoutId={`${idPrefix}-underline`}
-                  className="absolute inset-x-3 -bottom-px h-0.5 rounded-full bg-deep-gold"
-                  transition={spring.snappy}
-                />
-              ) : null}
-            </button>
-          );
-        })}
-      </div>
+    <div
+      role="tablist"
+      aria-label="Product categories"
+      className="no-scrollbar -mx-5 flex gap-2 overflow-x-auto [mask-image:linear-gradient(to_right,transparent,#000_20px,#000_calc(100%-20px),transparent)] px-5 py-1 sm:-mx-6 sm:px-6 md:mx-0 md:flex-wrap md:overflow-visible md:[mask-image:none] md:px-0"
+    >
+      {tabs.map((tab, i) => {
+        const selected = tab.id === value;
+        return (
+          <button
+            key={tab.id}
+            ref={(node) => {
+              refs.current[i] = node;
+            }}
+            id={`${idPrefix}-${tab.id}`}
+            type="button"
+            role="tab"
+            aria-selected={selected}
+            aria-controls={panelId}
+            tabIndex={selected ? 0 : -1}
+            onClick={() => {
+              onChange(tab.id);
+            }}
+            onKeyDown={onKeyDown}
+            className={cn(
+              "relative isolate inline-flex min-h-11 shrink-0 items-center rounded-full border px-4 font-display text-[0.9375rem] font-medium whitespace-nowrap transition-colors duration-200",
+              selected
+                ? "border-bright-gold text-navy-950"
+                : "border-slate-200 bg-white text-slate-600 hover:border-deep-gold hover:text-navy-950",
+            )}
+          >
+            {selected ? (
+              <motion.span
+                aria-hidden="true"
+                layoutId={`${idPrefix}-pill`}
+                className="absolute inset-0 -z-10 rounded-full bg-bright-gold"
+                transition={spring.snappy}
+              />
+            ) : null}
+            {tab.label}
+          </button>
+        );
+      })}
     </div>
   );
 }

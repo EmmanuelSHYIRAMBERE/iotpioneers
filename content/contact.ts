@@ -23,6 +23,7 @@ export const contactSection = {
   titleEmphasis: "Intelligent.",
   lead: "Businesses, institutions and partners: tell us what you want to connect, measure or automate, and we will help you plan the build.",
   emailLabel: "Email Us",
+  /** One label everywhere for the phone button (audit issue 31); the number is never altered. */
   callLabel: "Call Us",
   emailSubject: "Project enquiry from website",
   verified: false,

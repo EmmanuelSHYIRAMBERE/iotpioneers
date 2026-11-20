@@ -4,9 +4,10 @@ import { ArrowUpRight, Loader2, type LucideProps } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { ICON_STROKE } from "@/lib/tokens";
 import { MagneticInner } from "./MagneticInner";
+import { PressRipple } from "./PressRipple";
 
 const buttonVariants = cva(
-  "group/btn relative inline-flex shrink-0 items-center justify-center gap-2 rounded-button font-display font-semibold whitespace-nowrap transition-[background-color,border-color,color,transform] duration-200 ease-standard select-none active:scale-[0.98] disabled:pointer-events-none disabled:opacity-40 aria-disabled:pointer-events-none aria-disabled:opacity-40",
+  "group/btn relative inline-flex shrink-0 items-center justify-center gap-2 rounded-button font-display font-semibold whitespace-nowrap transition-[background-color,border-color,color,transform] duration-200 ease-standard select-none active:scale-97 disabled:pointer-events-none disabled:opacity-40 aria-disabled:pointer-events-none aria-disabled:opacity-40",
   {
     variants: {
       variant: {
@@ -129,7 +130,17 @@ export function AnimatedButton(props: AnimatedButtonProps) {
     </>
   );
 
-  const inner = magnetic ? <MagneticInner>{content}</MagneticInner> : content;
+  const magneticContent = magnetic ? <MagneticInner>{content}</MagneticInner> : content;
+  // Primary buttons get the soft press ripple (fine pointers only).
+  const inner =
+    variant === "primary" ? (
+      <>
+        <PressRipple />
+        {magneticContent}
+      </>
+    ) : (
+      magneticContent
+    );
   const classes = cn(buttonVariants({ variant, tone, size }), className);
 
   if (props.href !== undefined) {

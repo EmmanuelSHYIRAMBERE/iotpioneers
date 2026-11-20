@@ -1,5 +1,10 @@
+"use client";
+
+import { useRef } from "react";
+import Image from "next/image";
 import { Mail, MapPin, Phone } from "lucide-react";
 import { contact, contactSection } from "@/content/contact";
+import { ctaImage } from "@/content/images";
 import { AnimatedButton } from "@/components/ui/AnimatedButton";
 import { CopyToClipboard } from "@/components/ui/CopyToClipboard";
 import { MountWhenNear } from "@/components/ui/MountWhenNear";
@@ -12,10 +17,13 @@ import { StaticNetwork } from "@/components/visuals/StaticNetwork";
 import { ICON_STROKE } from "@/lib/tokens";
 
 /**
- * Section 09: "How do I start?" The only centred section. The node network converges into one
- * bright node, closing the "Signal to Insight" story. No contact form (no verified endpoint).
+ * Section 09: "How do I start?" A centred section. The node network converges into one bright
+ * node placed in the gap below the button row, never over text (audit issue 30), closing the
+ * "Signal to Insight" story. No contact form (no verified endpoint).
  */
 export function ContactSection() {
+  const textRef = useRef<HTMLDivElement>(null);
+  const focusRef = useRef<HTMLSpanElement>(null);
   const mailto = `mailto:${contact.email}?subject=${encodeURIComponent(contactSection.emailSubject)}`;
   const tel = `tel:${contact.phone}`;
 
@@ -37,12 +45,19 @@ export function ContactSection() {
       aria-labelledby="contact-title"
       className="surface-dark section-pad relative isolate overflow-hidden bg-navy-950 text-cloud-50"
     >
-      <AnimatedBackground variant="ctaGradient" className="-z-20" />
+      <AnimatedBackground variant="ctaGradient" className="-z-30" />
+      {ctaImage.src ? (
+        // Stand-in photo, decorative, under an 85% navy overlay so text stays at AA contrast.
+        <div aria-hidden="true" className="absolute inset-0 -z-20">
+          <Image src={ctaImage.src} alt="" fill sizes="100vw" className="object-cover" />
+          <div className="absolute inset-0 bg-navy-950/85" />
+        </div>
+      ) : null}
       <MountWhenNear
         className="absolute inset-0 -z-10"
-        fallback={<StaticNetwork variant="converge" seed={23} />}
+        fallback={<StaticNetwork variant="converge" seed={23} focus={{ x: 0.5, y: 0.62 }} />}
       >
-        <ParticleNetwork mode="converge" seed={23} />
+        <ParticleNetwork mode="converge" seed={23} calmRef={textRef} focusRef={focusRef} />
       </MountWhenNear>
       <div
         aria-hidden="true"
@@ -51,19 +66,25 @@ export function ContactSection() {
 
       <div className="container-page">
         <div className="mx-auto max-w-cta text-center">
-          <VerifyMarker verified={contactSection.verified}>
-            <p className="eyebrow">{contactSection.eyebrow}</p>
-            <h2 id="contact-title" className="mt-4 font-display text-display-l text-cloud-50">
-              <WordReveal
-                text={contactSection.titleLead}
-                emphasis={contactSection.titleEmphasis}
-                emphasisClassName="text-bright-gold"
-              />
-            </h2>
-            <p className="mx-auto mt-6 max-w-[60ch] text-lead text-slate-400">
-              {contactSection.lead}
-            </p>
-          </VerifyMarker>
+          {/* Nodes stay at 0.3 opacity or less over the heading and lead. */}
+          <div ref={textRef}>
+            <VerifyMarker verified={contactSection.verified}>
+              <p className="eyebrow">{contactSection.eyebrow}</p>
+              <h2
+                id="contact-title"
+                className="text-glow-gold mt-4 font-display text-display-l text-cloud-50"
+              >
+                <WordReveal
+                  text={contactSection.titleLead}
+                  emphasis={contactSection.titleEmphasis}
+                  emphasisClassName="text-bright-gold"
+                />
+              </h2>
+              <p className="mx-auto mt-6 max-w-[60ch] text-lead text-slate-400">
+                {contactSection.lead}
+              </p>
+            </VerifyMarker>
+          </div>
 
           <Reveal className="mt-10 flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:items-center">
             <VerifyMarker verified={contact.verified} className="flex flex-col gap-3 sm:flex-row">
@@ -78,13 +99,19 @@ export function ContactSection() {
                 iconPosition="left"
                 ariaLabel={`${contactSection.callLabel} on ${contact.phoneDisplay}`}
               >
-                <span className="lg:hidden">{contactSection.callLabel}</span>
-                <span className="hidden font-mono lg:inline">{contact.phoneDisplay}</span>
+                {contactSection.callLabel}
               </AnimatedButton>
             </VerifyMarker>
           </Reveal>
 
-          <Reveal className="mt-12">
+          <Reveal className="relative mt-12">
+            {/* The network converges here: in the gap between the buttons and the contact row. */}
+            <span
+              ref={focusRef}
+              aria-hidden="true"
+              data-converge-point=""
+              className="pointer-events-none absolute -top-6 left-1/2 size-px"
+            />
             <VerifyMarker verified={contact.verified}>
               <ul className="flex flex-col items-center justify-center gap-x-8 gap-y-1 border-t border-line-dark pt-8 font-mono text-small md:flex-row">
                 {details.map((detail) => {

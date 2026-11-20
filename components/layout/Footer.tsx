@@ -35,7 +35,36 @@ const linkClass =
 const underline =
   "absolute bottom-2.5 left-0 h-px w-full origin-left scale-x-0 bg-current transition-transform duration-200 group-hover:scale-x-100";
 
-/** Section 10: the deepest navy footer. */
+/** Non-breaking space. */
+const NBSP = String.fromCharCode(160);
+
+/** Renders "IoT Pioneers Shop ↗" with the last word and the icon kept together on one line. */
+function InlineIconText({ text }: { text: string }) {
+  const words = text.split(" ");
+  const last = words.pop() ?? "";
+  const lead = words.join(" ");
+  return (
+    <>
+      {lead ? `${lead} ` : null}
+      <span className="whitespace-nowrap">
+        {last}
+        {NBSP}
+        <ArrowUpRight
+          aria-hidden="true"
+          size={16}
+          strokeWidth={ICON_STROKE}
+          className="inline-block align-[-2px] transition-transform duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
+        />
+      </span>
+    </>
+  );
+}
+
+/**
+ * Section 10: the deepest navy footer. Four columns at lg (brand, Company, Products, Contact),
+ * two at md, one on mobile. The bottom bar holds the copyright (year computed), the Reduce motion
+ * toggle and Back to top.
+ */
 export function Footer() {
   const year = new Date().getFullYear();
   return (
@@ -62,7 +91,7 @@ export function Footer() {
                           target="_blank"
                           rel="noopener noreferrer"
                           aria-label={`${social.label} (opens in a new tab)`}
-                          className="flex size-10 items-center justify-center rounded-button text-slate-400 transition-colors duration-200 hover:bg-navy-900 hover:text-cloud-50"
+                          className="flex size-11 items-center justify-center rounded-button text-slate-400 transition-colors duration-200 hover:bg-navy-900 hover:text-cloud-50"
                         >
                           <Icon aria-hidden="true" size={20} strokeWidth={ICON_STROKE} />
                         </a>
@@ -109,13 +138,11 @@ export function Footer() {
                     rel="noopener noreferrer"
                     className={linkClass}
                   >
-                    {product.name}
-                    <ArrowUpRight
-                      aria-hidden="true"
-                      size={16}
-                      strokeWidth={ICON_STROKE}
-                      className="transition-transform duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
-                    />{" "}
+                    {/* Issue 34: the icon stays inline after the last word (no-wrap group with a
+                        non-breaking space), so it never drifts to the far right. */}
+                    <span>
+                      <InlineIconText text={product.name} />
+                    </span>{" "}
                     <span className="sr-only">(opens in a new tab)</span>
                     <span aria-hidden="true" className={underline} />
                   </a>
