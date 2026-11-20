@@ -278,13 +278,10 @@ test.describe("design audit batch 1", () => {
     });
   }
 
-  test("preview notice collapses to a single button (issue 4)", async ({ page }) => {
+  test("no preview banner is rendered (removed at the owner's request)", async ({ page }) => {
     await page.goto("/");
-    await page.getByRole("button", { name: "Collapse preview notice" }).click();
     await expect(page.getByRole("complementary", { name: "Preview build notice" })).toHaveCount(0);
-    const pill = page.getByRole("button", { name: /Preview build: \d+ content items/ });
-    const box = await pill.boundingBox();
-    expect(box?.width).toBeLessThanOrEqual(48);
+    await expect(page.getByRole("button", { name: /Preview build:/ })).toHaveCount(0);
   });
 
   test("hero with reduced motion emulated looks finished", async ({ browser }, testInfo) => {

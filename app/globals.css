@@ -606,16 +606,6 @@
     outline-offset: 4px;
     border-radius: 2px;
   }
-  /* Keep focused elements clear of the preview pill when the browser scrolls them into view. */
-  html[data-preview="true"] {
-    scroll-padding-bottom: 72px;
-  }
-  html[data-hide-verify="true"] .verify-marker {
-    outline: none;
-  }
-  html[data-hide-verify="true"] .verify-tag {
-    display: none;
-  }
 }
 
 /* Pause every CSS loop under reduced motion. */

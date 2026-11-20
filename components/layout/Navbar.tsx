@@ -80,21 +80,26 @@ export function Navbar({
     if (returnFocus) menuButtonRef.current?.focus();
   }, []);
 
-  // Entrance (scroll-motion-choreography): logo fades in, links drop 8px with a 40ms stagger
-  // from 100ms, the CTA fades in last. Reduced motion renders everything in place.
+  // Entrance (scroll-motion-choreography): links drop 8px with a 40ms stagger from 100ms. The
+  // header is never hidden: nothing here starts at opacity 0, so the logo, links and CTA are
+  // visible in the server HTML before JavaScript runs. Reduced motion renders everything in place.
   const reduced = useReducedMotionPreference();
+  // Always keep an `animate` target: the server renders with motion allowed, and if the client then
+  // reads reduced motion, an element with `initial` but no `animate` would stay in its start state.
   const enter = (index: number, drop: boolean) =>
-    reduced
-      ? { initial: false as const }
-      : {
-          initial: { opacity: 0, y: drop ? -runDistance.navLinkDrop : 0 },
-          animate: { opacity: 1, y: 0 },
-          transition: {
-            duration: s(runTiming.navLogoFade),
-            ease: ease.outExpo,
-            delay: s(runTiming.navLinksAt) + staggerDelay(index, runTiming.navLinkStagger),
-          },
-        };
+    drop
+      ? {
+          initial: { y: -runDistance.navLinkDrop },
+          animate: { y: 0 },
+          transition: reduced
+            ? { duration: 0 }
+            : {
+                duration: s(runTiming.navLogoFade),
+                ease: ease.outExpo,
+                delay: s(runTiming.navLinksAt) + staggerDelay(index, runTiming.navLinkStagger),
+              },
+        }
+      : { initial: false as const };
   const ctaIndex = links.length + 1;
 
   return (
@@ -119,20 +124,13 @@ export function Navbar({
             scrolled && !menuOpen ? "translate-y-2" : "translate-y-0",
           )}
         >
-          <motion.a
+          <a
             href="#top"
             className="inline-flex min-h-11 items-center rounded-button"
             aria-label={`${brandName}, back to top`}
-            {...(reduced
-              ? { initial: false as const }
-              : {
-                  initial: { opacity: 0 },
-                  animate: { opacity: 1 },
-                  transition: { duration: s(runTiming.navLogoFade), ease: ease.outExpo },
-                })}
           >
             <Logo alt="" size="nav" />
-          </motion.a>
+          </a>
 
           <nav aria-label="Main" className="hidden lg:block">
             <ul className="flex items-center gap-8">

@@ -12,9 +12,10 @@ const nextConfig: NextConfig = {
     dangerouslyAllowSVG: false,
   },
   env: {
-    // Exposed so client components can render VerifyMarker outlines and the PreviewBanner
-    // in preview and development builds only.
+    // Exposed so client components know a preview build allows unverified content.
     NEXT_PUBLIC_ALLOW_UNVERIFIED_CONTENT: process.env.ALLOW_UNVERIFIED_CONTENT ?? "false",
+    // Opt-in only: VerifyMarker outlines and tags show when this is "true" (default off).
+    NEXT_PUBLIC_SHOW_VERIFY_MARKERS: process.env.NEXT_PUBLIC_SHOW_VERIFY_MARKERS ?? "false",
   },
 };
 

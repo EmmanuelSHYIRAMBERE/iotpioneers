@@ -1,6 +1,5 @@
 import type { ReactNode } from "react";
 import { cn } from "@/lib/cn";
-import { isPreviewMode } from "@/lib/verification";
 
 export interface VerifyMarkerProps {
   verified: boolean;
@@ -12,10 +11,13 @@ export interface VerifyMarkerProps {
 }
 
 /**
- * Development and preview only: wraps unverified content in a magenta (preview tooling) dotted outline with a
- * small "Unverified" tag. Production builds cannot contain unverified content (the content
- * gate fails), so in production this renders its element with no marker.
+ * Opt-in review tooling: when NEXT_PUBLIC_SHOW_VERIFY_MARKERS is "true", unverified content gets a
+ * magenta dotted outline and a small "Unverified" tag. By default (every build, including preview
+ * and development) it renders only its element: no outline, no tag, nothing extra in the
+ * accessibility tree. The content gate and CONTENT_VERIFICATION.md remain the register.
  */
+const SHOW_MARKERS = process.env.NEXT_PUBLIC_SHOW_VERIFY_MARKERS === "true";
+
 export function VerifyMarker({
   verified,
   children,
@@ -23,7 +25,7 @@ export function VerifyMarker({
   className,
   tagPosition = "top-right",
 }: VerifyMarkerProps) {
-  const show = !verified && isPreviewMode();
+  const show = SHOW_MARKERS && !verified;
   return (
     <Tag className={cn(show && "verify-marker", className)} data-unverified={show || undefined}>
       {children}

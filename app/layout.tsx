@@ -7,11 +7,9 @@ import { socialLinks } from "@/content/social";
 import { SkipLink } from "@/components/layout/SkipLink";
 import { AnchorHighlight } from "@/components/ui/AnchorHighlight";
 import { MotionProvider } from "@/components/ui/MotionProvider";
-import { PreviewBanner } from "@/components/ui/PreviewBanner";
-import { contentModules } from "@/lib/contentRegistry";
 import { buildOrganizationJsonLd } from "@/lib/structuredData";
 import { colors } from "@/lib/tokens";
-import { collectAllIssues, isPlaceholder, isPreviewMode, resolveSiteUrl } from "@/lib/verification";
+import { isPlaceholder, isPreviewMode, resolveSiteUrl } from "@/lib/verification";
 import { REDUCE_MOTION_STORAGE_KEY } from "@/lib/motion";
 import "./globals.css";
 
@@ -89,13 +87,11 @@ export default function RootLayout({ children }: { children: ReactNode }) {
     social: socialLinks,
     logoPath: null,
   });
-  const unverifiedCount = preview ? collectAllIssues(contentModules).length : 0;
 
   return (
     <html
       lang="en"
       className={`${spaceGrotesk.variable} ${inter.variable} ${jetBrainsMono.variable}`}
-      data-preview={preview ? "true" : undefined}
       suppressHydrationWarning
     >
       <head>
@@ -114,7 +110,6 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <SkipLink />
         <MotionProvider>{children}</MotionProvider>
         <AnchorHighlight />
-        {preview ? <PreviewBanner unverifiedCount={unverifiedCount} /> : null}
       </body>
     </html>
   );
