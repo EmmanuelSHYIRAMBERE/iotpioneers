@@ -1,0 +1,231 @@
+import type { ProductHighlight, ShopAudience, ShopCategory, Verifiable } from "./types";
+
+const SHOP = "https://iotpioneersshop.com";
+const LISTED =
+  "Name and URL copied from iotpioneersshop.com (fetched 2026.11.20); photo reuse permission pending";
+const INFERRED = `${LISTED}; category assignment inferred from the homepage, confirm`;
+
+export const shopHeading = {
+  eyebrow: "PRODUCT · IoT PIONEERS SHOP",
+  title: "Everything you need to build what's next.",
+  lead: "Development boards, sensors, displays and components for engineers, students, makers and developers, from the team that builds with them every day.",
+  cta: { label: "Explore the Shop", href: "https://iotpioneersshop.com/" },
+  allLabel: "All",
+  emptyMessage: "No highlighted products in this category yet.",
+  emptyActionLabel: "Browse all categories in the shop",
+  errorMessage: "We couldn't load products right now.",
+  errorFallbackLabel: "Visit the shop directly",
+  verified: false,
+  source: "Provisional copy from specification section 9.07; audience needs confirmation",
+} as const satisfies Verifiable & Record<string, unknown>;
+
+/**
+ * Categories as named in the live shop's footer list. A subset is shown to keep the tab
+ * row readable; "Solar Products and Batteries" has no highlighted products yet and shows
+ * the empty state by design.
+ */
+export const shopCategories: readonly ShopCategory[] = [
+  {
+    id: "boards",
+    label: "Arduino & Board Modules",
+    href: `${SHOP}/product-category/arduino-and-other-board-modules/`,
+    verified: false,
+    source: "iotpioneersshop.com category list (fetched 2026.11.20)",
+  },
+  {
+    id: "sensors",
+    label: "Sensors & Components",
+    href: `${SHOP}/product-category/sensors-and-components/`,
+    verified: false,
+    source: "iotpioneersshop.com category list (fetched 2026.11.20)",
+  },
+  {
+    id: "communication",
+    label: "Communication Modules",
+    href: `${SHOP}/product-category/communication-modules/`,
+    verified: false,
+    source: "iotpioneersshop.com category list (fetched 2026.11.20)",
+  },
+  {
+    id: "displays",
+    label: "Displays",
+    href: `${SHOP}/product-category/displays/`,
+    verified: false,
+    source: "iotpioneersshop.com category list (fetched 2026.11.20)",
+  },
+  {
+    id: "prototyping",
+    label: "Prototyping Components",
+    href: `${SHOP}/product-category/prototyping-components/`,
+    verified: false,
+    source: "iotpioneersshop.com category list (fetched 2026.11.20)",
+  },
+  {
+    id: "solar",
+    label: "Solar & Batteries",
+    href: `${SHOP}/product-category/solar-batteries/`,
+    verified: false,
+    source: "iotpioneersshop.com category list (fetched 2026.11.20)",
+  },
+];
+
+export const shopHighlights: readonly ProductHighlight[] = [
+  {
+    id: "esp32-devboard",
+    name: "ESP32 ESP-32 Wireless WiFi Bluetooth Development Board",
+    categoryId: "boards",
+    image: null,
+    illustration: "board",
+    href: `${SHOP}/product/esp32-esp-32-wireless-wifi-bluetooth-development-board/`,
+    verified: false,
+    source: INFERRED,
+  },
+  {
+    id: "nodemcu-esp8266",
+    name: "NodeMCU ESP8266",
+    categoryId: "boards",
+    image: null,
+    illustration: "board",
+    href: `${SHOP}/product/nodemcu-esp8266-wifi-internet-development-board/`,
+    verified: false,
+    source: INFERRED,
+  },
+  {
+    id: "arduino-uno",
+    name: "Arduino Uno",
+    categoryId: "boards",
+    image: null,
+    illustration: "board",
+    href: `${SHOP}/product/2726/`,
+    verified: false,
+    source: INFERRED,
+  },
+  {
+    id: "esp32-cam",
+    name: "ESP32 Camera Development Board WiFi+Bluetooth Module",
+    categoryId: "boards",
+    image: null,
+    illustration: "camera",
+    href: `${SHOP}/product/esp32-camera-development-board-wifibluetooth-module/`,
+    verified: false,
+    source: INFERRED,
+  },
+  {
+    id: "pir-hc-sr501",
+    name: "PIR Motion Sensor Detector Module (HC-SR501)",
+    categoryId: "sensors",
+    image: null,
+    illustration: "sensor",
+    href: `${SHOP}/product/pir-motion-sensor-detector-module-hc-sr501/`,
+    verified: false,
+    source: INFERRED,
+  },
+  {
+    id: "usb-ir-converter",
+    name: "USB to Near Infrared IR Converter (IEC62056 / DLMS)",
+    categoryId: "communication",
+    image: null,
+    illustration: "module",
+    href: `${SHOP}/product/usb-to-near-infrared-ir-converter-irda-near-ir-infrared-adapter-optical-interface-transmission-cable-iec62056-1107-dlms/`,
+    verified: false,
+    source: INFERRED,
+  },
+  {
+    id: "ttl-ir-adapter",
+    name: "My014-B TTL to IR Near Infrared Optic Adapter for IEC62056 Meter Reading",
+    categoryId: "communication",
+    image: null,
+    illustration: "module",
+    href: `${SHOP}/product/my014-b-ttl-to-ir-near-infrared-optic-adapter-for-iec62056-dlms-sts-kwh-gas-water-meter-reading/`,
+    verified: false,
+    source: INFERRED,
+  },
+  {
+    id: "lcd-16x2",
+    name: "LCD Display (16X2)",
+    categoryId: "displays",
+    image: null,
+    illustration: "display",
+    href: `${SHOP}/product/2961/`,
+    verified: false,
+    source: LISTED,
+  },
+  {
+    id: "lcd-20x4",
+    name: "LCD 20X4 2004 MOD52",
+    categoryId: "displays",
+    image: null,
+    illustration: "display",
+    href: `${SHOP}/product/lcd-20x4-2004-mod52/`,
+    verified: false,
+    source: LISTED,
+  },
+  {
+    id: "nokia-5110",
+    name: "84×48 Pixel LCD Module For Nokia 5110",
+    categoryId: "displays",
+    image: null,
+    illustration: "display",
+    href: `${SHOP}/product/84x48-pixel-lcd-module-for-nokia-5110-disp/`,
+    verified: false,
+    source: LISTED,
+  },
+  {
+    id: "i2c-lcd-controller",
+    name: "I2C LCD Controller Module for 1602 or 2004",
+    categoryId: "displays",
+    image: null,
+    illustration: "module",
+    href: `${SHOP}/product/i2c-lcd-controller-module-for-1602-or-2004-disp52/`,
+    verified: false,
+    source: LISTED,
+  },
+  {
+    id: "seven-segment-ca",
+    name: "7-Segment Display – CA Red",
+    categoryId: "displays",
+    image: null,
+    illustration: "segment",
+    href: `${SHOP}/product/7-segment-display-ca-red/`,
+    verified: false,
+    source: LISTED,
+  },
+  {
+    id: "resistor-100r",
+    name: "Metal Oxide 1W 100 Ohm Film Resistor",
+    categoryId: "prototyping",
+    image: null,
+    illustration: "component",
+    href: `${SHOP}/product/metal-oxide-1w-100-ohm-film-resistor/`,
+    verified: false,
+    source: INFERRED,
+  },
+];
+
+export const shopAudiences: readonly ShopAudience[] = [
+  {
+    id: "students",
+    title: "For students",
+    text: "Parts for coursework, labs and final year projects.",
+    icon: "graduation",
+    verified: false,
+    source: "Audience proposed in specification; not stated on the live shop",
+  },
+  {
+    id: "makers",
+    title: "For makers & engineers",
+    text: "Boards, sensors and modules for prototypes and field builds.",
+    icon: "wrench",
+    verified: false,
+    source:
+      "Audience proposed in specification; live shop mentions engineers and meter technicians",
+  },
+  {
+    id: "teams",
+    title: "For teams & institutions",
+    text: "Components for labs, training programmes and project teams.",
+    icon: "building",
+    verified: false,
+    source: "Audience proposed in specification; not stated on the live shop",
+  },
+];

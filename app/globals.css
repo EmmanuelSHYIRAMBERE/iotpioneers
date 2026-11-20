@@ -1,0 +1,547 @@
+@import "tailwindcss";
+
+/*
+ * IoT Pioneers design tokens. Single source of truth for colour, type, radius and elevation.
+ * Colour values are mirrored in lib/tokens.ts for canvas code; tests/unit/tokens.test.ts
+ * keeps both in sync. Human readable reference: docs/05_design_system.md.
+ */
+@theme {
+  --color-*: initial;
+  --color-navy-1000: #070c18;
+  --color-navy-950: #0a1020;
+  --color-navy-900: #142642;
+  --color-navy-800: #1b3156;
+  /* Brand gold, from the logo (design audit issue 1). Contrast record: docs/05_design_system.md. */
+  --color-pioneer-gold: #ab910f;
+  --color-bright-gold: #d4af37;
+  --color-deep-gold: #7a6406;
+  /* Second chart series only. Electric Blue #2563EB is retired. */
+  --color-blue-400: #60a5fa;
+  --color-cyan-700: #0e7490;
+  --color-cyan-500: #06b6d4;
+  --color-cyan-400: #22d3ee;
+  --color-cloud-50: #f8fafc;
+  --color-white: #ffffff;
+  --color-slate-100: #f1f5f9;
+  --color-slate-200: #e2e8f0;
+  --color-slate-300: #cbd5e1;
+  --color-slate-400: #94a3b8;
+  --color-slate-600: #475569;
+  --color-amber-400: #f5a524;
+  --color-green-400: #34d399;
+  --color-red-400: #f87171;
+  /* Preview tooling only (unverified markers, preview notice). Magenta so it never reads as
+     brand gold. Never used for brand styling. */
+  --color-preview: #c026d3;
+  --color-transparent: transparent;
+  --color-current: currentColor;
+
+  /* Borders on dark surfaces */
+  --color-line-dark: rgb(148 163 184 / 0.16);
+  --color-line-dark-strong: rgb(148 163 184 / 0.32);
+  --color-line-dark-soft: rgb(148 163 184 / 0.12);
+
+  --font-display: var(--font-space-grotesk), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains-mono), ui-monospace, "SFMono-Regular", monospace;
+
+  /* Capped at 88px and by viewport height so the hero fits above the fold at 1366x768 (audit issue 8). */
+  --text-display-xl: min(clamp(2.75rem, 1.2rem + 4.2vw, 5.5rem), 10.5svh);
+  --text-display-xl--line-height: 0.98;
+  --text-display-xl--letter-spacing: -0.035em;
+  --text-display-xl--font-weight: 600;
+  --text-display-l: clamp(2.25rem, 1.5rem + 3.2vw, 4.5rem);
+  --text-display-l--line-height: 1.04;
+  --text-display-l--letter-spacing: -0.025em;
+  --text-display-l--font-weight: 600;
+  --text-h3: clamp(1.5rem, 1.2rem + 1.2vw, 2.25rem);
+  --text-h3--line-height: 1.15;
+  --text-h3--letter-spacing: -0.015em;
+  --text-h3--font-weight: 600;
+  /* Collapsible index rows (Solutions): 22 to 28px, so a row title never wraps at 1024px.
+     Real subsection titles keep h3. */
+  --text-row-title: clamp(1.375rem, 1rem + 0.8vw, 1.75rem);
+  --text-row-title--line-height: 1.2;
+  --text-row-title--letter-spacing: -0.01em;
+  --text-row-title--font-weight: 600;
+  --text-h4: 1.25rem;
+  --text-h4--line-height: 1.3;
+  --text-h4--font-weight: 600;
+  --text-lead: clamp(1.125rem, 1rem + 0.4vw, 1.375rem);
+  --text-lead--line-height: 1.55;
+  --text-body: 1rem;
+  --text-body--line-height: 1.65;
+  --text-body-lg: 1.0625rem;
+  --text-body-lg--line-height: 1.65;
+  --text-small: 0.875rem;
+  --text-small--line-height: 1.5;
+  --text-legal: 0.8125rem;
+  --text-legal--line-height: 1.5;
+  --text-eyebrow: 0.75rem;
+  --text-eyebrow--line-height: 1.4;
+  --text-eyebrow--letter-spacing: 0.14em;
+  --text-data: clamp(1.75rem, 1.4rem + 1vw, 2.5rem);
+  --text-data--line-height: 1.1;
+  --text-marquee: clamp(1.5rem, 1rem + 2vw, 3rem);
+  --text-marquee--line-height: 1;
+  --text-menu: 2rem;
+  --text-menu--line-height: 1.2;
+
+  --radius-*: initial;
+  --radius-tag: 4px;
+  --radius-button: 8px;
+  --radius-card: 12px;
+  --radius-frame: 16px;
+  --radius-full: 9999px;
+
+  --shadow-*: initial;
+  --shadow-rest: 0 1px 2px rgb(10 16 32 / 0.06), 0 8px 24px rgb(10 16 32 / 0.06);
+  --shadow-hover: 0 16px 40px rgb(10 16 32 / 0.1);
+  --shadow-highlight: inset 0 1px 0 rgb(248 250 252 / 0.06);
+
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-in: cubic-bezier(0.4, 0, 1, 1);
+  --ease-in-out-sine: cubic-bezier(0.37, 0, 0.63, 1);
+
+  /* Fixed navbar height before scrolling (the scrolled bar is 64px). */
+  --spacing-nav: 80px;
+
+  --container-page: 1280px;
+  --container-wide: 1440px;
+  --container-cta: 880px;
+  --container-lead: 600px;
+  --container-prose: 68ch;
+
+  --animate-pulse-dot: pulse-dot 2s var(--ease-in-out-sine) infinite;
+  --animate-scroll-cue: scroll-cue 1.8s var(--ease-in-out-sine) infinite;
+  --animate-shimmer: shimmer 1.6s linear infinite;
+  --animate-breathe: breathe 8s var(--ease-in-out-sine) infinite;
+  --animate-spin-ring: spin 1s linear infinite;
+  --animate-bob: bob 6s var(--ease-in-out-sine) infinite;
+  --animate-centre-pulse: centre-pulse 2.4s var(--ease-in-out-sine) infinite;
+}
+
+/* Hover effects only for hover capable, fine pointers (specification section 10, item 14). */
+@custom-variant hover {
+  @media (hover: hover) and (pointer: fine) {
+    &:hover {
+      @slot;
+    }
+  }
+}
+
+/* Reduced motion: the system setting or the footer toggle. */
+@custom-variant reduce {
+  @media (prefers-reduced-motion: reduce) {
+    @slot;
+  }
+  [data-reduce-motion="true"] & {
+    @slot;
+  }
+}
+
+@keyframes pulse-dot {
+  0% {
+    transform: scale(1);
+    opacity: 0.6;
+  }
+  100% {
+    transform: scale(1.6);
+    opacity: 0;
+  }
+}
+@keyframes scroll-cue {
+  0% {
+    transform: translateY(0);
+    opacity: 0;
+  }
+  15% {
+    opacity: 1;
+  }
+  85% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(42px);
+    opacity: 0;
+  }
+}
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+@keyframes breathe {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.04);
+  }
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes bob {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+@keyframes centre-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.15);
+  }
+}
+@keyframes marquee {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
+@layer base {
+  html {
+    color-scheme: dark light;
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+  }
+  html[data-reduce-motion="true"] {
+    scroll-behavior: auto;
+  }
+
+  body {
+    background-color: var(--color-navy-950);
+    color: var(--color-cloud-50);
+    font-family: var(--font-sans);
+    font-size: var(--text-body);
+    line-height: var(--text-body--line-height);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    overflow-x: clip;
+  }
+  @media (min-width: 1024px) {
+    body {
+      font-size: var(--text-body-lg);
+    }
+  }
+
+  /* Anchor targets clear the scrolled navbar. */
+  section[id],
+  [data-anchor] {
+    scroll-margin-top: 64px;
+  }
+
+  /* Focus: 2px solid, 2px offset; colour follows the surface. */
+  /* brightGold on dark (9.01:1), deepGold on light (5.49:1 on cloud50). */
+  :root {
+    --focus-ring: var(--color-bright-gold);
+  }
+  .surface-light {
+    --focus-ring: var(--color-deep-gold);
+  }
+  .surface-dark {
+    --focus-ring: var(--color-bright-gold);
+  }
+  :focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 2px;
+  }
+  :focus:not(:focus-visible) {
+    outline: none;
+  }
+
+  ::selection {
+    background: var(--color-bright-gold);
+    color: var(--color-navy-950);
+  }
+
+  em,
+  i {
+    font-style: normal;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    text-wrap: balance;
+  }
+  p {
+    text-wrap: pretty;
+  }
+}
+
+@layer components {
+  .container-page {
+    width: 100%;
+    max-width: calc(var(--container-page) + 2 * var(--page-pad));
+    margin-inline: auto;
+    padding-inline: var(--page-pad);
+  }
+  .container-wide {
+    width: 100%;
+    max-width: calc(var(--container-wide) + 2 * var(--page-pad));
+    margin-inline: auto;
+    padding-inline: var(--page-pad);
+  }
+  :root {
+    --page-pad: 20px;
+  }
+  @media (min-width: 640px) {
+    :root {
+      --page-pad: 24px;
+    }
+  }
+  @media (min-width: 768px) {
+    :root {
+      --page-pad: 40px;
+    }
+  }
+  @media (min-width: 1024px) {
+    :root {
+      --page-pad: 56px;
+    }
+  }
+  @media (min-width: 1280px) {
+    :root {
+      --page-pad: 64px;
+    }
+  }
+
+  /* 12 / 8 / 4 column grid with the specified gutters. */
+  .grid-page {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    column-gap: 16px;
+  }
+  @media (min-width: 768px) {
+    .grid-page {
+      grid-template-columns: repeat(8, minmax(0, 1fr));
+      column-gap: 20px;
+    }
+  }
+  @media (min-width: 1024px) {
+    .grid-page {
+      grid-template-columns: repeat(12, minmax(0, 1fr));
+      column-gap: 24px;
+    }
+  }
+  @media (min-width: 1280px) {
+    .grid-page {
+      column-gap: 32px;
+    }
+  }
+
+  /* Hero content starts below the fixed navbar plus 48px (audit issue 7). */
+  .hero-offset {
+    padding-top: calc(var(--spacing-nav) + 48px);
+  }
+
+  /*
+   * Section rhythm (audit issue 6). Top padding is larger than bottom padding, so where two
+   * sections meet the combined empty space stays at or under about 200px:
+   * 56 + 72 = 128 (mobile), 72 + 96 = 168 (md), 80 + 112 = 192 (lg and up).
+   */
+  .section-pad {
+    padding-top: 72px;
+    padding-bottom: 56px;
+  }
+  @media (min-width: 768px) {
+    .section-pad {
+      padding-top: 96px;
+      padding-bottom: 72px;
+    }
+  }
+  @media (min-width: 1024px) {
+    .section-pad {
+      padding-top: 112px;
+      padding-bottom: 80px;
+    }
+  }
+  /*
+   * A section that follows one on the same surface (Solutions after About) uses a smaller top
+   * padding, because no change of surface marks the join.
+   */
+  .section-pad-joined {
+    padding-top: 56px;
+  }
+  @media (min-width: 768px) {
+    .section-pad-joined {
+      padding-top: 72px;
+    }
+  }
+  @media (min-width: 1024px) {
+    .section-pad-joined {
+      padding-top: 80px;
+    }
+  }
+
+  .eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    font-family: var(--font-mono);
+    font-weight: 500;
+    font-size: var(--text-eyebrow);
+    line-height: var(--text-eyebrow--line-height);
+    letter-spacing: var(--text-eyebrow--letter-spacing);
+    text-transform: uppercase;
+    color: var(--color-pioneer-gold);
+  }
+  .eyebrow::before {
+    content: "";
+    width: 6px;
+    height: 6px;
+    border-radius: 9999px;
+    background: currentColor;
+    flex: none;
+  }
+  .surface-light .eyebrow {
+    color: var(--color-deep-gold);
+  }
+
+  /* The single allowed gradient text: "Intelligence" in the hero, brightGold to pioneerGold. */
+  .text-gradient-gold {
+    background-image: linear-gradient(90deg, var(--color-bright-gold), var(--color-pioneer-gold));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    -webkit-box-decoration-break: clone;
+    box-decoration-break: clone;
+  }
+
+  /*
+   * The only three background gradients on the page (specification section 6).
+   * Do not add a fourth.
+   */
+  .bg-glow-hero {
+    background-image: radial-gradient(
+      closest-side,
+      color-mix(in srgb, var(--color-pioneer-gold) 22%, transparent),
+      transparent
+    );
+  }
+  .bg-glow-datahub {
+    background-image: radial-gradient(
+      closest-side,
+      color-mix(in srgb, var(--color-cyan-500) 18%, transparent),
+      transparent
+    );
+  }
+  .bg-cta-gradient {
+    /* Gold stop: pioneerGold mixed 12% into navy900. */
+    background-image: linear-gradient(
+      135deg,
+      var(--color-navy-950) 0%,
+      var(--color-navy-900) 60%,
+      color-mix(in srgb, var(--color-pioneer-gold) 12%, var(--color-navy-900)) 100%
+    );
+  }
+  /*
+   * Hero readability veil (specification 9.02, "Readability protection"): a functional overlay
+   * that keeps the text over a calm area, not a decorative background.
+   */
+  .bg-hero-veil {
+    background-image: linear-gradient(to right, rgb(10 16 32 / 0.85) 0%, transparent 60%);
+  }
+  @media (max-width: 767px) {
+    .bg-hero-veil {
+      background-image: linear-gradient(
+        to top,
+        rgb(10 16 32 / 0.92) 0%,
+        rgb(10 16 32 / 0.6) 50%,
+        transparent 62%
+      );
+    }
+  }
+  /* Fade the CTA into the footer colour over its last 120px (part of gradient 3). */
+  .bg-cta-fade {
+    background-image: linear-gradient(to bottom, transparent, var(--color-navy-1000));
+  }
+
+  /* Engineering canvas: 48px dot grid drawn as an SVG pattern (not a gradient). */
+  .bg-dot-grid {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48'%3E%3Ccircle cx='1' cy='1' r='1' fill='%2394A3B8' fill-opacity='0.08'/%3E%3C/svg%3E");
+    background-size: 48px 48px;
+  }
+
+  /* Optional Imigongo inspired texture (client approval required, off by default). */
+  .bg-imigongo {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='32' viewBox='0 0 64 32'%3E%3Cpath d='M0 16 L8 4 L16 16 L24 4 L32 16 L40 4 L48 16 L56 4 L64 16 M0 28 L8 16 L16 28 L24 16 L32 28 L40 16 L48 28 L56 16 L64 28' fill='none' stroke='%23F8FAFC' stroke-width='1.5'/%3E%3C/svg%3E");
+    background-size: 64px 32px;
+  }
+
+  .sr-only-focusable:not(:focus):not(:focus-within) {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  .no-scrollbar {
+    scrollbar-width: none;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Unverified content marker: development and preview builds only. */
+  .verify-marker {
+    position: relative;
+    outline: 1.5px dotted var(--color-preview);
+    outline-offset: 4px;
+    border-radius: 2px;
+  }
+  /* Keep focused elements clear of the preview pill when the browser scrolls them into view. */
+  html[data-preview="true"] {
+    scroll-padding-bottom: 72px;
+  }
+  html[data-hide-verify="true"] .verify-marker {
+    outline: none;
+  }
+  html[data-hide-verify="true"] .verify-tag {
+    display: none;
+  }
+}
+
+/* Pause every CSS loop under reduced motion. */
+@media (prefers-reduced-motion: reduce) {
+  .motion-loop {
+    animation: none !important;
+  }
+}
+html[data-reduce-motion="true"] .motion-loop {
+  animation: none !important;
+}

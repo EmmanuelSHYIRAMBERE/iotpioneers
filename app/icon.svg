@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <!-- Temporary favicon built from the node motif; replace with the client's square mark. -->
+  <rect width="32" height="32" rx="7" fill="#0A1020"/>
+  <path d="M8 22 L16 10 L24 20" fill="none" stroke="#94A3B8" stroke-width="1.6"/>
+  <circle cx="8" cy="22" r="3" fill="#94A3B8"/>
+  <circle cx="24" cy="20" r="3" fill="#60A5FA"/>
+  <circle cx="16" cy="10" r="4" fill="#22D3EE"/>
+</svg>

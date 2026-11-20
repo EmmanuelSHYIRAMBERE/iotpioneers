@@ -1,0 +1,109 @@
+import { Activity, Bell, ChartLine, Layers, Plug, type LucideIcon } from "lucide-react";
+import { dataHub } from "@/content/dataHub";
+import type { Feature } from "@/content/types";
+import { DataHubStoryLoader } from "@/components/dashboard/DataHubStoryLoader";
+import { AnimatedButton } from "@/components/ui/AnimatedButton";
+import { FeatureList } from "@/components/ui/FeatureList";
+import { SectionHeading } from "@/components/ui/SectionHeading";
+import { VerifyMarker } from "@/components/ui/VerifyMarker";
+import { AnimatedBackground } from "@/components/visuals/AnimatedBackground";
+
+const FEATURE_ICONS: Record<Feature["icon"], LucideIcon> = {
+  plug: Plug,
+  activity: Activity,
+  chart: ChartLine,
+  layers: Layers,
+  bell: Bell,
+};
+
+/** Section 06: "Show me proof." IoTDataHub presented as a product launch with a simulated demo. */
+export function DataHubShowcase() {
+  return (
+    <section
+      id="iotdatahub"
+      aria-labelledby="iotdatahub-title"
+      className="surface-dark section-pad relative isolate [overflow-x:clip] bg-navy-950 text-cloud-50"
+    >
+      <AnimatedBackground variant="dotGrid" className="-z-10" />
+      <AnimatedBackground variant="dataHubGlow" className="-z-10" />
+
+      <div className="container-page">
+        <div className="grid-page gap-y-8">
+          <div className="col-span-full lg:col-span-7">
+            <SectionHeading
+              id="iotdatahub-title"
+              eyebrow={dataHub.eyebrow}
+              title={dataHub.title}
+              tone="onDark"
+              lead={
+                <VerifyMarker verified={dataHub.lead.verified}>
+                  <p>{dataHub.lead.text}</p>
+                </VerifyMarker>
+              }
+            />
+          </div>
+          <div className="col-span-full flex flex-col items-start gap-6 lg:col-span-4 lg:col-start-9 lg:justify-end">
+            <VerifyMarker verified={dataHub.protocols.verified}>
+              <ul aria-label="Supported protocols" className="flex flex-wrap gap-2">
+                {dataHub.protocols.items.map((protocol) => (
+                  <li
+                    key={protocol}
+                    className="rounded-tag border border-line-dark-strong px-2.5 py-1 font-mono text-small text-cloud-50"
+                  >
+                    {protocol}
+                  </li>
+                ))}
+              </ul>
+            </VerifyMarker>
+            <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
+              <AnimatedButton href={dataHub.cta.href} external size="lg">
+                {dataHub.cta.label}
+              </AnimatedButton>
+              <AnimatedButton href="#iotdatahub-demo" variant="link" tone="dark">
+                {dataHub.howItWorksLabel}
+              </AnimatedButton>
+            </div>
+            <VerifyMarker verified={dataHub.ownership.verified}>
+              <p className="text-small text-slate-400">{dataHub.ownership.text}</p>
+            </VerifyMarker>
+          </div>
+        </div>
+      </div>
+
+      <div className="container-wide mt-12 md:mt-16">
+        <DataHubStoryLoader
+          steps={dataHub.steps}
+          labels={{
+            sidebar: dataHub.sidebarTerms.items,
+            badgeLabel: dataHub.demoBadge.label,
+            badgeTooltip: dataHub.demoBadge.tooltip,
+            address: new URL(dataHub.cta.href).hostname.replace(/^www\./, ""),
+          }}
+          productHref={dataHub.cta.href}
+          productLabel={dataHub.cta.label}
+        />
+        <p className="mt-6 text-small text-slate-400">{dataHub.demoCaption}</p>
+      </div>
+
+      <div className="container-page mt-16 md:mt-20">
+        <FeatureList
+          tone="onDark"
+          columns={4}
+          items={dataHub.features.map((feature) => ({
+            id: feature.id,
+            title: feature.title,
+            text: feature.text,
+            icon: FEATURE_ICONS[feature.icon],
+            verified: feature.verified,
+          }))}
+        />
+        <div className="mt-16 flex flex-col items-start gap-4">
+          <AnimatedButton href={dataHub.cta.href} external size="lg">
+            {dataHub.cta.label}
+          </AnimatedButton>
+          <p className="text-small text-slate-400">{dataHub.endNote}</p>
+        </div>
+      </div>
+    </section>
+  );
+}
