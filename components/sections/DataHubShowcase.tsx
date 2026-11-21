@@ -53,9 +53,6 @@ export function DataHubShowcase() {
             <AnimatedButton href={dataHub.cta.href} external size="lg">
               {dataHub.cta.label}
             </AnimatedButton>
-            <AnimatedButton href="#iotdatahub-demo" variant="link" tone="dark">
-              {dataHub.howItWorksLabel}
-            </AnimatedButton>
             <VerifyMarker verified={dataHub.protocols.verified}>
               <ul aria-label="Supported protocols" className="flex flex-wrap gap-2">
                 {dataHub.protocols.items.map((protocol) => (

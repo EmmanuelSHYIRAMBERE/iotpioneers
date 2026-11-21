@@ -3,10 +3,10 @@ import type { Verifiable } from "./types";
 export const hero = {
   eyebrow: "IoT ENGINEERING · SOFTWARE · CONNECTED SOLUTIONS",
   /** Line one is rendered as `lineOneLead` followed by the gradient `emphasis` word. */
-  lineOneLead: "Engineering",
-  emphasis: "Intelligence.",
-  lineTwo: "Connecting the Future.",
-  lead: "IoT Pioneers designs and builds connected systems, from sensors and devices to the software and data platforms that make them useful. Based in Kigali, built for anywhere.",
+  lineOneLead: "IoT",
+  emphasis: "Pioneers.",
+  lineTwo: "Tech Revolution.",
+  lead: "IoT Pioneers designs and builds connected systems, from sensors and devices to the software and data platforms that make them useful.",
   primaryCta: { label: "Start a Project", href: "#contact" },
   secondaryCta: { label: "See Our Products", href: "#iotdatahub" },
   chips: [

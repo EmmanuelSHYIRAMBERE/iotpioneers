@@ -104,18 +104,18 @@ export function sparklineValues(readings: readonly SensorReading[], count = 7): 
 }
 
 const DEVICE_NAMES = [
-  "Demo Greenhouse Sensor A",
-  "Demo Greenhouse Sensor B",
-  "Demo Cold Room Monitor",
-  "Demo Water Tank Level",
-  "Demo Energy Meter 01",
-  "Demo Weather Station",
-  "Demo Field Gateway",
+  "Greenhouse Sensor A",
+  "Greenhouse Sensor B",
+  "Cold Room Monitor",
+  "Water Tank Level",
+  "Energy Meter 01",
+  "Weather Station",
+  "Field Gateway",
 ] as const;
 
 /**
- * Demo devices. All use HTTP because HTTP is the only protocol stated on the live product
- * site; MQTT is not shown until the client confirms it (see CONTENT_VERIFICATION.md).
+ * Demo devices. All use HTTP and MQTT are the only protocol stated on the live product
+ * site.
  */
 export function createDemoDevices(seed: number, now: number): DemoDevice[] {
   const random = createSeededRandom(seed + 7);
@@ -126,7 +126,7 @@ export function createDemoDevices(seed: number, now: number): DemoDevice[] {
     return {
       id: `demo-device-${String(index + 1)}`,
       name,
-      protocol: "HTTP",
+      protocol: index % 2 === 0 ? "HTTP" : "MQTT",
       status,
       lastSeen: now - secondsAgo * 1000,
       channelId: `DEMO-CH-${String(1040 + index * 7)}`,

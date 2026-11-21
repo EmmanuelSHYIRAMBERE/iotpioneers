@@ -10,7 +10,7 @@ export const about = {
   } satisfies Verifiable & { lines: readonly string[] },
   // Neutral draft copy: no years, numbers, clients or capability claims (audit issue 12).
   lead: {
-    text: "IoT Pioneers is a technology company based in Kigali, Rwanda.",
+    text: "IoT Pioneers has a mission to accelerate technology adoption by providing an affordable IoT cloud platform enabling students, researchers, and innovators to build real-world solutions and develop practical digital skills.",
     verified: false,
     source: "Neutral draft copy; company overview not supplied",
     todo: "Company overview, lead paragraph: two sentences on who IoT Pioneers is and what it builds",
@@ -27,7 +27,7 @@ export const about = {
     source: "Specification section 9.04; confirm each focus area",
   } satisfies Verifiable & { items: readonly string[] },
   annotation: {
-    text: "Kigali, Rwanda",
+    text: "Build, Apply",
     verified: false,
     source: "Location from specification",
     todo: "Add the founding year here only if the client confirms it (audit issue 15)",

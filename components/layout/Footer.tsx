@@ -13,7 +13,6 @@ import { footerCompanyLinks, products } from "@/content/navigation";
 import { site } from "@/content/site";
 import { socialLinks } from "@/content/social";
 import type { SocialPlatform } from "@/content/types";
-import { ReduceMotionToggle } from "@/components/ui/ReduceMotionToggle";
 import { Reveal } from "@/components/ui/Reveal";
 import { VerifyMarker } from "@/components/ui/VerifyMarker";
 import { AnimatedBackground } from "@/components/visuals/AnimatedBackground";
@@ -207,7 +206,6 @@ export function Footer() {
             </p>
           </VerifyMarker>
           <div className="flex flex-wrap items-center gap-x-8 gap-y-2">
-            <ReduceMotionToggle />
             <BackToTop />
           </div>
         </div>
