@@ -13,7 +13,7 @@ export function CompanyIntro() {
     <section
       id="about"
       aria-labelledby="about-title"
-      className="surface-light section-pad bg-cloud-50 text-navy-950"
+      className="surface-light section-pad section-pad-joined bg-cloud-50 text-navy-950"
     >
       <div className="container-page grid-page gap-y-16">
         <div className="col-span-full md:col-span-8 lg:order-2 lg:col-span-6 lg:col-start-7 lg:pt-4">

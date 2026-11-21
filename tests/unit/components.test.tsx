@@ -102,12 +102,7 @@ describe("ReduceMotionToggle", () => {
 
 describe("SolutionsIndex", () => {
   it("opens the first row by default and moves between rows with the arrow keys", async () => {
-    // The scroll story with its keyboard list renders at lg and up (improvement run 2, task 7).
-    const original = window.matchMedia.bind(window);
-    vi.spyOn(window, "matchMedia").mockImplementation((query: string) => ({
-      ...original(query),
-      matches: query === "(min-width: 1024px)",
-    }));
+    // The scroll story's keyboard list (shown at lg and up through CSS; improvement run 2, task 7).
     const user = userEvent.setup();
     render(<SolutionsIndexClient solutions={solutions} />);
     const rows = screen
@@ -155,12 +150,15 @@ describe("CategoryTabs", () => {
   });
 });
 
-describe("SolutionsIndexClient below lg", () => {
-  it("shows every capability as a stacked card with its text", () => {
+describe("SolutionsIndexClient stacked cards", () => {
+  it("renders every capability with its text (the cards layout shows below lg)", () => {
     render(<SolutionsIndexClient solutions={solutions} />);
     for (const solution of solutions) {
-      expect(screen.getByRole("heading", { name: new RegExp(solution.title) })).toBeInTheDocument();
-      expect(screen.getByText(solution.summary)).toBeInTheDocument();
+      // Both layouts are in the DOM and switch with CSS at lg (jsdom applies no CSS).
+      expect(
+        screen.getAllByRole("heading", { name: new RegExp(solution.title) }).length,
+      ).toBeGreaterThan(0);
+      expect(screen.getAllByText(solution.summary).length).toBeGreaterThan(0);
     }
   });
 });

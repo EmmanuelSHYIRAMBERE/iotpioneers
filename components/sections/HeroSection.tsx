@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, type CSSProperties, type RefObject } from "react";
 import dynamic from "next/dynamic";
 import { motion, useScroll, useTransform, type Variants } from "motion/react";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Pause, Play } from "lucide-react";
 import { AnimatedButton } from "@/components/ui/AnimatedButton";
 import { VerifyMarker } from "@/components/ui/VerifyMarker";
 import { AnimatedBackground } from "@/components/visuals/AnimatedBackground";
@@ -12,6 +12,7 @@ import { StaticGlobe } from "@/components/visuals/StaticNetwork";
 import { mediaQueries, useMediaQuery } from "@/hooks/useMediaQuery";
 import { useReducedMotionPreference } from "@/hooks/useReducedMotionPreference";
 import { cn } from "@/lib/cn";
+import { ICON_STROKE } from "@/lib/tokens";
 import { distance, duration, ease, globe, s, spotlight, stagger, timing } from "@/lib/motion";
 
 /** The globe and its point data load after the hero text; the static frame holds the space. */
@@ -202,6 +203,7 @@ export function HeroSection({ content }: HeroSectionProps) {
   // When the last word has risen, release the masks so the glow is never clipped into boxes.
   const revealEndMs = lineTwoStart + (lineTwo.length - 1) * stagger.words + duration.reveal;
   const [masksDone, setMasksDone] = useState(false);
+  const [globePaused, setGlobePaused] = useState(false);
   useEffect(() => {
     const id = window.setTimeout(() => {
       setMasksDone(true);
@@ -217,7 +219,7 @@ export function HeroSection({ content }: HeroSectionProps) {
       ref={sectionRef}
       id="top"
       aria-labelledby="hero-title"
-      className="surface-dark hero-offset relative isolate flex min-h-svh items-end overflow-hidden bg-navy-950 pb-20 max-md:pt-[var(--spacing-nav)] md:items-center md:pb-32"
+      className="surface-dark hero-offset relative isolate flex items-center overflow-hidden bg-navy-950 pb-16 max-md:pt-[var(--spacing-nav)] md:pb-28"
     >
       {/* Background layers: a faint node network (the globe is the only strong focal point). */}
       <motion.div
@@ -256,7 +258,26 @@ export function HeroSection({ content }: HeroSectionProps) {
           style={GLOBE_BOX_STYLE}
         >
           <div className="relative aspect-square w-full">
-            <ConnectedGlobe compact={!tablet} />
+            <ConnectedGlobe compact={!tablet} paused={globePaused} />
+          </div>
+          {/* Pause control for the continuously turning globe (WCAG 2.2.2). The globe itself is
+              decorative and hidden from assistive technology; this button is not. */}
+          <div className="mt-2 flex justify-end">
+            <button
+              type="button"
+              onClick={() => {
+                setGlobePaused((value) => !value);
+              }}
+              aria-pressed={globePaused}
+              aria-label={globePaused ? "Resume globe animation" : "Pause globe animation"}
+              className="flex size-8 items-center justify-center rounded-full border border-line-dark-strong text-slate-400 transition-colors duration-200 hover:border-bright-gold hover:text-cloud-50"
+            >
+              {globePaused ? (
+                <Play aria-hidden="true" size={14} strokeWidth={ICON_STROKE} />
+              ) : (
+                <Pause aria-hidden="true" size={14} strokeWidth={ICON_STROKE} />
+              )}
+            </button>
           </div>
         </div>
 

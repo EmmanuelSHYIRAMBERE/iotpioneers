@@ -9,7 +9,6 @@ import type { Solution } from "@/content/types";
 import { VerifyMarker } from "@/components/ui/VerifyMarker";
 import { SolutionIllustration } from "@/components/visuals/SolutionIllustrations";
 import { useInView } from "@/hooks/useInView";
-import { mediaQueries, useMediaQuery } from "@/hooks/useMediaQuery";
 import { useReducedMotionPreference } from "@/hooks/useReducedMotionPreference";
 import { cn } from "@/lib/cn";
 import {
@@ -164,7 +163,6 @@ function Deliverables({ items }: { items: readonly string[] }) {
  * - Reduced motion: no packets or stroke drawing; the active item still follows the scroll.
  */
 export function SolutionsIndexClient({ solutions }: SolutionsIndexClientProps) {
-  const desktop = useMediaQuery(mediaQueries.lg);
   const reduced = useReducedMotionPreference();
   const [activeId, setActiveId] = useState(solutions[0]?.id ?? "");
   const items = useRef<(HTMLLIElement | null)[]>([]);
@@ -173,9 +171,10 @@ export function SolutionsIndexClient({ solutions }: SolutionsIndexClientProps) {
   const panelInView = useInView(panelRef);
   const start = reduced ? false : "hidden";
 
-  // The item crossing the horizontal centre line of the viewport is the active one.
+  // The item crossing a thin band (2% of the viewport) at its centre is the active one; a
+  // zero-height band is never reported as intersecting in WebKit. Below lg the
+  // story list is display: none, so its items never intersect and nothing changes.
   useEffect(() => {
-    if (!desktop) return;
     const observer = new IntersectionObserver(
       (entries) => {
         for (const entry of entries) {
@@ -184,7 +183,7 @@ export function SolutionsIndexClient({ solutions }: SolutionsIndexClientProps) {
           if (id) setActiveId(id);
         }
       },
-      { rootMargin: "-50% 0px -50% 0px", threshold: 0 },
+      { rootMargin: "-49% 0px -49% 0px", threshold: 0 },
     );
     items.current.forEach((item) => {
       if (item) observer.observe(item);
@@ -192,7 +191,7 @@ export function SolutionsIndexClient({ solutions }: SolutionsIndexClientProps) {
     return () => {
       observer.disconnect();
     };
-  }, [desktop, solutions.length]);
+  }, [solutions.length]);
 
   const activate = (index: number): void => {
     const solution = solutions[index];
@@ -220,164 +219,171 @@ export function SolutionsIndexClient({ solutions }: SolutionsIndexClientProps) {
   );
   const active = solutions[activeIndex];
 
-  if (!desktop) {
-    return (
-      <ol className="flex flex-col gap-10">
-        {solutions.map((solution, index) => (
-          <motion.li
-            key={solution.id}
-            initial={start}
-            whileInView="visible"
-            viewport={{ once: true, amount: viewportAmount.cards }}
-            variants={enterLeft(true)}
-          >
-            <VerifyMarker verified={solution.verified}>
-              <CapabilityPanel
-                solution={solution}
-                position={index + 1}
-                total={solutions.length}
-                animated={!reduced}
-                pulsing
-                className="aspect-[4/3]"
-              />
-              <h3 className="mt-5 flex items-baseline gap-4">
-                <span className="font-mono text-small text-slate-600">{solution.index}</span>
-                <span className="font-display text-row-title text-navy-950">{solution.title}</span>
-              </h3>
-              <p className="mt-3 max-w-prose text-body text-slate-600">{solution.summary}</p>
-              <Deliverables items={solution.deliverables} />
-              <DiscussLink solution={solution} />
-            </VerifyMarker>
-          </motion.li>
-        ))}
-      </ol>
-    );
-  }
+  // Both layouts are in the server HTML and switch with CSS at lg, so hydration never changes the
+  // page height (a JavaScript switch moved everything below by about 4000px after load).
+  const cards = (
+    <ol className="flex flex-col gap-10 lg:hidden">
+      {solutions.map((solution, index) => (
+        <motion.li
+          key={solution.id}
+          initial={start}
+          whileInView="visible"
+          viewport={{ once: true, amount: viewportAmount.cards }}
+          variants={enterLeft(true)}
+        >
+          <VerifyMarker verified={solution.verified}>
+            <CapabilityPanel
+              solution={solution}
+              position={index + 1}
+              total={solutions.length}
+              animated={!reduced}
+              pulsing
+              className="aspect-[4/3]"
+            />
+            <h3 className="mt-5 flex items-baseline gap-4">
+              <span className="font-mono text-small text-slate-600">{solution.index}</span>
+              <span className="font-display text-row-title text-navy-950">{solution.title}</span>
+            </h3>
+            <p className="mt-3 max-w-prose text-body text-slate-600">{solution.summary}</p>
+            <Deliverables items={solution.deliverables} />
+            <DiscussLink solution={solution} />
+          </VerifyMarker>
+        </motion.li>
+      ))}
+    </ol>
+  );
 
   return (
-    <div className="grid-page">
-      <ol className="col-span-6 border-t border-slate-200">
-        {solutions.map((solution, index) => {
-          const open = solution.id === active?.id;
-          const headerId = `solution-${solution.id}-header`;
-          const panelId = `solution-${solution.id}-panel`;
-          return (
-            <li
-              key={solution.id}
-              ref={(node) => {
-                items.current[index] = node;
-              }}
-              data-solution-id={solution.id}
-              data-active={open || undefined}
-              // Each item reserves enough height for its expanded content, so expanding never
-              // shifts the list while scrolling (and the centre line meets one item at a time).
-              className="relative flex min-h-[46svh] flex-col justify-center border-b border-slate-200"
-            >
-              <motion.div
-                className="relative"
-                initial={start}
-                whileInView="visible"
-                viewport={{ once: true, amount: viewportAmount.reveal }}
-                variants={enterLeft(false, staggerDelay(index, runStagger.solutionRows))}
-              >
-                {/* Gold left bar on the active item. */}
-                <motion.span
-                  aria-hidden="true"
-                  className="absolute top-0 bottom-0 left-0 w-0.5 origin-top bg-deep-gold"
-                  initial={false}
-                  animate={{ scaleY: open ? 1 : 0 }}
-                  transition={{ duration: s(runTiming.illustrationCrossfade), ease: ease.outExpo }}
-                />
-                <VerifyMarker verified={solution.verified}>
-                  <h3>
-                    <button
-                      ref={(node) => {
-                        buttons.current[index] = node;
-                      }}
-                      id={headerId}
-                      type="button"
-                      aria-expanded={open}
-                      aria-controls={panelId}
-                      onClick={() => {
-                        activate(index);
-                      }}
-                      onKeyDown={(event) => {
-                        onKeyDown(event, index);
-                      }}
-                      className="group flex min-h-11 w-full items-center gap-6 py-4 pr-1 pl-5 text-left"
-                    >
-                      <span className="font-mono text-small text-slate-600">{solution.index}</span>
-                      <span
-                        className={cn(
-                          "flex-1 font-display text-row-title transition-colors duration-200",
-                          open ? "text-deep-gold" : "text-navy-950 group-hover:text-deep-gold",
-                        )}
-                      >
-                        {solution.title}
-                      </span>
-                    </button>
-                  </h3>
-                  <AnimatePresence initial={false}>
-                    {open ? (
-                      <motion.div
-                        id={panelId}
-                        role="region"
-                        aria-labelledby={headerId}
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        transition={{
-                          duration: reduced ? 0 : s(runTiming.illustrationCrossfade),
-                          ease: ease.standard,
-                        }}
-                        className="pr-1 pb-6 pl-[4.25rem]"
-                      >
-                        <p className="max-w-prose text-body text-slate-600">{solution.summary}</p>
-                        <Deliverables items={solution.deliverables} />
-                        <DiscussLink solution={solution} />
-                      </motion.div>
-                    ) : null}
-                  </AnimatePresence>
-                </VerifyMarker>
-              </motion.div>
-            </li>
-          );
-        })}
-      </ol>
-
-      {/* Sticky panel: stays centred while the list scrolls past and changes with the active item. */}
-      <div className="col-span-5 col-start-8">
-        <div
-          ref={panelRef}
-          data-solutions-panel=""
-          className="sticky top-[calc(50svh-min(34svh,270px))] h-[min(68svh,540px)]"
-        >
-          {active ? (
-            <AnimatePresence initial={false}>
-              <motion.div
-                key={active.id}
-                className="absolute inset-0"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{
-                  duration: reduced ? 0 : s(runTiming.illustrationCrossfade),
-                  ease: ease.standard,
+    <>
+      {cards}
+      <div className="grid-page hidden lg:grid">
+        <ol className="col-span-6 border-t border-slate-200">
+          {solutions.map((solution, index) => {
+            const open = solution.id === active?.id;
+            const headerId = `solution-${solution.id}-header`;
+            const panelId = `solution-${solution.id}-panel`;
+            return (
+              <li
+                key={solution.id}
+                ref={(node) => {
+                  items.current[index] = node;
                 }}
+                data-solution-id={solution.id}
+                data-active={open || undefined}
+                // Every item has the same layout active or not, so activation never shifts the list.
+                className="relative flex flex-col justify-center border-b border-slate-200 py-6"
               >
-                <CapabilityPanel
-                  solution={active}
-                  position={activeIndex + 1}
-                  total={solutions.length}
-                  animated={!reduced}
-                  pulsing={panelInView}
-                  className="h-full"
-                />
-              </motion.div>
-            </AnimatePresence>
-          ) : null}
+                <motion.div
+                  className="relative"
+                  initial={start}
+                  whileInView="visible"
+                  viewport={{ once: true, amount: viewportAmount.reveal }}
+                  variants={enterLeft(false, staggerDelay(index, runStagger.solutionRows))}
+                >
+                  {/* Gold left bar on the active item. */}
+                  <motion.span
+                    aria-hidden="true"
+                    className="absolute top-0 bottom-0 left-0 w-0.5 origin-top bg-deep-gold"
+                    initial={false}
+                    animate={{ scaleY: open ? 1 : 0 }}
+                    transition={{
+                      duration: s(runTiming.illustrationCrossfade),
+                      ease: ease.outExpo,
+                    }}
+                  />
+                  <VerifyMarker verified={solution.verified}>
+                    <h3>
+                      <button
+                        ref={(node) => {
+                          buttons.current[index] = node;
+                        }}
+                        id={headerId}
+                        type="button"
+                        aria-expanded={open}
+                        aria-controls={panelId}
+                        onClick={() => {
+                          activate(index);
+                        }}
+                        onKeyDown={(event) => {
+                          onKeyDown(event, index);
+                        }}
+                        className="group flex min-h-11 w-full items-center gap-6 py-4 pr-1 pl-5 text-left"
+                      >
+                        <span className="font-mono text-small text-slate-600">
+                          {solution.index}
+                        </span>
+                        <span
+                          className={cn(
+                            "flex-1 font-display text-row-title transition-colors duration-200",
+                            open ? "text-deep-gold" : "text-navy-950 group-hover:text-deep-gold",
+                          )}
+                        >
+                          {solution.title}
+                        </span>
+                      </button>
+                    </h3>
+                    {/* Always rendered so every item keeps the same height whether it is active or
+                      not: if expanding changed the layout, the centre line could flip between two
+                      items in a loop. Inactive content is hidden and inert. */}
+                    <motion.div
+                      id={panelId}
+                      role="region"
+                      aria-labelledby={headerId}
+                      aria-hidden={!open}
+                      inert={!open}
+                      initial={false}
+                      animate={{ opacity: open ? 1 : 0 }}
+                      transition={{
+                        duration: reduced ? 0 : s(runTiming.illustrationCrossfade),
+                        ease: ease.standard,
+                      }}
+                      className={cn("pr-1 pb-6 pl-[4.25rem]", !open && "pointer-events-none")}
+                    >
+                      <p className="max-w-prose text-body text-slate-600">{solution.summary}</p>
+                      <Deliverables items={solution.deliverables} />
+                      <DiscussLink solution={solution} />
+                    </motion.div>
+                  </VerifyMarker>
+                </motion.div>
+              </li>
+            );
+          })}
+        </ol>
+
+        {/* Sticky panel: stays centred while the list scrolls past and changes with the active item. */}
+        <div className="col-span-5 col-start-8">
+          <div
+            ref={panelRef}
+            data-solutions-panel=""
+            className="sticky top-[calc(50svh-min(34svh,270px))] h-[min(68svh,540px)]"
+          >
+            {active ? (
+              <AnimatePresence initial={false}>
+                <motion.div
+                  key={active.id}
+                  className="absolute inset-0"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{
+                    duration: reduced ? 0 : s(runTiming.illustrationCrossfade),
+                    ease: ease.standard,
+                  }}
+                >
+                  <CapabilityPanel
+                    solution={active}
+                    position={activeIndex + 1}
+                    total={solutions.length}
+                    animated={!reduced}
+                    pulsing={panelInView}
+                    className="h-full"
+                  />
+                </motion.div>
+              </AnimatePresence>
+            ) : null}
+          </div>
         </div>
       </div>
-    </div>
+    </>
   );
 }

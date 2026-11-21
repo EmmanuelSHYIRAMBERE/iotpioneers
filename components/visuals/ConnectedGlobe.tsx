@@ -21,6 +21,8 @@ import {
 export interface ConnectedGlobeProps {
   /** Mobile composition: no orbits, 4 arcs, 30 frames per second. */
   compact: boolean;
+  /** Paused by the visitor (the hero's pause button, WCAG 2.2.2): holds the current frame. */
+  paused?: boolean;
   className?: string;
 }
 
@@ -60,7 +62,11 @@ function markState(wrapper: HTMLElement | null, value: GlobeState): void {
  * the reduced motion behaviour. `data-globe-state` reports "loading", "running", "paused" or
  * "static"; `data-globe-angle` (radians) and `data-globe-edges` support tests.
  */
-export default function ConnectedGlobe({ compact, className }: ConnectedGlobeProps) {
+export default function ConnectedGlobe({
+  compact,
+  paused = false,
+  className,
+}: ConnectedGlobeProps) {
   const wrapperRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const staticRef = useRef<HTMLDivElement>(null);
@@ -184,7 +190,7 @@ export default function ConnectedGlobe({ compact, className }: ConnectedGlobePro
       };
     }
 
-    if (!inView || !pageVisible) {
+    if (!inView || !pageVisible || paused) {
       markState(wrapper, drawRef.current ? "paused" : "loading");
       return;
     }
@@ -242,7 +248,7 @@ export default function ConnectedGlobe({ compact, className }: ConnectedGlobePro
     return () => {
       cancelAnimationFrame(frameId);
     };
-  }, [mode, inView, pageVisible, compact]);
+  }, [mode, inView, pageVisible, paused, compact]);
 
   // Pointer tilt toward the cursor (fine pointers) and horizontal touch drag with inertia.
   useEffect(() => {

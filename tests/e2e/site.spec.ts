@@ -1,5 +1,6 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
+import { hero } from "../../content/hero";
 
 const IOTDATAHUB = "https://www.iotdatahub.rw/";
 const SHOP = "https://iotpioneersshop.com/";
@@ -18,7 +19,7 @@ test.describe("page", () => {
     const errors = trackConsoleErrors(page);
     await page.goto("/");
     await expect(page.locator("h1")).toHaveCount(1);
-    await expect(page.getByRole("heading", { level: 1 })).toContainText("Engineering");
+    await expect(page.getByRole("heading", { level: 1 })).toContainText(hero.lineOneLead);
     await expect(page.locator("main#main-content")).toBeVisible();
     await expect(page.locator("footer")).toBeAttached();
     await page.waitForTimeout(1500);
@@ -316,7 +317,11 @@ test.describe("design audit batch 1 follow-ups", () => {
       const contentRects = (root: Element): DOMRect[] => {
         const rects: DOMRect[] = [];
         root.querySelectorAll("*").forEach((el) => {
-          if (el.closest('[aria-hidden="true"]')) return;
+          // Decorative layers are skipped, except the Solutions capability panel: it is visible
+          // content that fills its column, hidden from assistive technology only because the
+          // list beside it carries the same text.
+          const panel = el.closest("[data-solutions-panel]");
+          if (el.closest('[aria-hidden="true"]') && !panel) return;
           const media = MEDIA.has(el.tagName.toUpperCase());
           const leafText = el.children.length === 0 && (el.textContent ?? "").trim() !== "";
           if (!media && !leafText) return;
@@ -653,13 +658,17 @@ test.describe("improvement run 2", () => {
   test("the hero headline has no lighter box behind its words", async ({ page }) => {
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.goto("/");
-    await page.waitForTimeout(3500);
-    const clipped = await page
-      .locator("#hero-title span")
-      .evaluateAll(
-        (nodes) => nodes.filter((n) => getComputedStyle(n).overflow === "hidden").length,
-      );
-    expect(clipped).toBe(0);
+    await expect
+      .poll(
+        () =>
+          page
+            .locator("#hero-title span")
+            .evaluateAll(
+              (nodes) => nodes.filter((n) => getComputedStyle(n).overflow === "hidden").length,
+            ),
+        { timeout: 15_000 },
+      )
+      .toBe(0);
   });
 
   test("the globe angle keeps increasing over 10 seconds while visible", async ({
@@ -683,17 +692,20 @@ test.describe("improvement run 2", () => {
     }
   });
 
-  test("the footer Reduce motion switch freezes the globe on its static frame", async ({
-    page,
-  }) => {
+  test("the globe pause button holds the frame (WCAG 2.2.2)", async ({ page, isMobile }) => {
+    test.skip(isMobile, "Desktop layout");
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.goto("/");
-    await page.getByRole("switch", { name: /Reduce motion/ }).click();
-    await expect(page.locator("[data-globe-state]").first()).toHaveAttribute(
-      "data-globe-state",
-      "static",
-      { timeout: 20_000 },
-    );
+    const host = page.locator("[data-globe-state]").first();
+    await expect(host).toHaveAttribute("data-globe-state", "running", { timeout: 20_000 });
+    // The footer switch was removed by the owner (commit 2792d9d); the hero button is the pause control.
+    await page.getByRole("button", { name: "Pause globe animation" }).click();
+    await expect(host).toHaveAttribute("data-globe-state", "paused");
+    const before = await host.getAttribute("data-globe-angle");
+    await page.waitForTimeout(2500);
+    expect(await host.getAttribute("data-globe-angle")).toBe(before);
+    await page.getByRole("button", { name: "Resume globe animation" }).click();
+    await expect(host).toHaveAttribute("data-globe-state", "running");
   });
 
   for (const viewport of [
@@ -761,7 +773,9 @@ test.describe("improvement run 2", () => {
         "data-active",
         "true",
       );
-      await expect(page.locator(`[data-capability-panel="${id}"]`)).toBeAttached();
+      await expect(
+        page.locator(`[data-solutions-panel] [data-capability-panel="${id}"]`),
+      ).toBeAttached();
     }
     // Keyboard: Enter on an item scrolls it to the middle and activates it.
     const last = page.getByRole("button", { name: /Technology Integration/ });
