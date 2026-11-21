@@ -13,6 +13,7 @@ export const customTheme = {
     "display-l",
     "h3",
     "row-title",
+    "reading",
     "h4",
     "lead",
     "body",
@@ -21,14 +22,13 @@ export const customTheme = {
     "legal",
     "eyebrow",
     "data",
-    "marquee",
     "menu",
   ],
   radius: ["tag", "button", "card", "frame"],
   shadow: ["rest", "hover", "highlight"],
   ease: ["out-expo", "standard", "in", "in-out-sine"],
   animate: ["pulse-dot", "scroll-cue", "shimmer", "breathe", "spin-ring", "bob", "centre-pulse"],
-  container: ["page", "wide", "cta", "lead", "prose"],
+  container: ["dashboard", "page", "wide", "cta", "lead", "prose"],
 } as const;
 
 const twMerge = extendTailwindMerge({

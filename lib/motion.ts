@@ -35,7 +35,6 @@ export const timing = {
   scrollCue: 1800,
   glowBreath: 8000,
   dotPulse: 2000,
-  marqueeEase: 400,
   statementLine: 800,
   clipReveal: 1000,
   clipRevealMobile: 700,
@@ -200,7 +199,6 @@ export const runTiming = {
 export const runStagger = {
   aboutParagraphs: 90,
   solutionRows: 60,
-  valueStrip: 80,
   pathRows: 90,
   shopPills: 40,
   shopCards: 80,
@@ -243,6 +241,17 @@ export const runDistance = {
 export const globe = {
   /** One full turn, west to east. */
   turnMs: 40_000,
+  /** One full turn under the system reduced motion setting (arcs only, no orbits or packets). */
+  turnReducedMs: 120_000,
+  /**
+   * Edge connections: every 2 to 4 seconds a line forms between an orbit icon and the nearest
+   * front-rim land point; a packet travels it, then it fades. At most three at once.
+   */
+  edgeEveryMinMs: 2000,
+  edgeEveryMaxMs: 4000,
+  edgeTravelMs: 1000,
+  edgeFadeMs: 1000,
+  edgeMax: 3,
   /** Kigali ring grows from 6px to 28px and fades over this period. */
   kigaliPulseMs: 2400,
   kigaliNodePx: 6,
@@ -284,13 +293,6 @@ export const spotlight = {
   sizePx: 480,
   opacity: 0.06,
   smoothing: 0.1,
-} as const;
-
-/** Marquee rows: pixels per second, and the hover slowdown factor. */
-export const marqueeSpeed = {
-  topPxPerSecond: 40,
-  bottomPxPerSecond: 32,
-  hoverFactor: 0.25,
 } as const;
 
 /** Entrance duration in seconds, capped on mobile. */

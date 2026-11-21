@@ -6,7 +6,6 @@ import { Pause, Play, PlugZap, Thermometer } from "lucide-react";
 import type { DemoDevice } from "@/content/types";
 import { SegmentedControl } from "@/components/ui/SegmentedControl";
 import { SensorStatusCard } from "@/components/ui/SensorStatusCard";
-import { DemoBadge } from "@/components/ui/DemoBadge";
 import { AnimatedChart, type ChartSeries } from "@/components/visuals/AnimatedChart";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { useReducedMotionPreference } from "@/hooks/useReducedMotionPreference";
@@ -41,9 +40,9 @@ const FOCUS_FOR_STEP: Record<StoryStep, FocusRegion> = {
 
 export interface DashboardLabels {
   sidebar: readonly string[];
-  badgeLabel: string;
-  badgeTooltip: string;
   address: string;
+  /** One line under the frame: the single simulated data disclaimer. */
+  caption: string;
 }
 
 export interface IoTDashboardPreviewProps {
@@ -99,9 +98,9 @@ export function IoTDashboardPreview({
 }: IoTDashboardPreviewProps) {
   const reduced = useReducedMotionPreference();
   const roomy = useMediaQuery("(min-width: 1536px)");
-  const [userPaused, setUserPaused] = useState<boolean | null>(null);
-  // Reduced motion starts paused until the visitor chooses to play.
-  const paused = userPaused ?? reduced;
+  // Live data runs from the moment the dashboard is visible, also under reduced motion (values
+  // update; charts change without drawing animations). The visitor can pause it (WCAG 2.2.2).
+  const [paused, setUserPaused] = useState(false);
   const live = inView && !paused;
   const { series, devices, now, messages, range, setRange } = useDemoData(seed, live);
   const [view, setView] = useState<SensorView>(layout === "mobile" ? "temperature" : "both");
@@ -207,26 +206,26 @@ export function IoTDashboardPreview({
     { value: "24H", label: "24H" },
   ] as const;
 
+  // One compact 32px icon button in the dashboard's top bar (WCAG 2.2.2 pause control).
   const liveControl = (
     <button
       type="button"
       onClick={() => {
         setUserPaused(!paused);
       }}
-      aria-pressed={!paused}
-      className="inline-flex min-h-11 items-center gap-2 rounded-button border border-line-dark px-3 font-mono text-small text-slate-400 transition-colors duration-200 hover:border-line-dark-strong hover:text-cloud-50"
+      aria-label={paused ? "Resume live data" : "Pause live data"}
+      className="flex size-8 shrink-0 items-center justify-center rounded-button text-slate-400 transition-colors duration-200 hover:bg-navy-800 hover:text-cloud-50"
     >
       {paused ? (
         <Play aria-hidden="true" size={14} strokeWidth={ICON_STROKE} />
       ) : (
         <Pause aria-hidden="true" size={14} strokeWidth={ICON_STROKE} />
       )}
-      {paused ? (reduced ? "Play live demo" : "Resume live data") : "Pause live data"}
     </button>
   );
 
   const cards = (
-    <Region region="cards" focus={focus} className="grid grid-cols-2 gap-2 lg:grid-cols-4 lg:gap-3">
+    <Region region="cards" focus={focus} className="grid grid-cols-2 gap-2">
       <SensorStatusCard
         label="Temperature"
         value={lastTemp}
@@ -312,7 +311,7 @@ export function IoTDashboardPreview({
         drawn={chartDrawn}
         instant={reduced}
         rangeKey={range}
-        className={layout === "mobile" ? "h-48" : "h-56 xl:h-auto xl:min-h-24 xl:flex-1"}
+        className={layout === "mobile" ? "h-48" : "h-45"}
       />
     </Region>
   );
@@ -324,9 +323,13 @@ export function IoTDashboardPreview({
       className="flex min-h-0 min-w-0 flex-col rounded-card bg-navy-900 p-2 shadow-highlight lg:p-3"
     >
       <p className="mb-1 px-2 font-mono text-small text-slate-400">Devices</p>
-      {/* Below xl the frame grows with its content and the list shows at least three devices
-          (audit follow-up: devices panel at 900px). */}
-      <div className="max-h-72 min-h-0 flex-1 overflow-y-auto xl:max-h-none">
+      {/* Three rows visible with internal scroll on desktop (compact density); taller on phones. */}
+      <div
+        className={cn(
+          "min-h-0 flex-1 overflow-y-auto",
+          layout === "mobile" ? "max-h-72" : "max-h-33",
+        )}
+      >
         <DeviceList devices={listDevices} now={now} />
       </div>
     </Region>
@@ -356,14 +359,13 @@ export function IoTDashboardPreview({
       >
         <div className="mb-3 flex items-center justify-between gap-2">
           <p className="font-mono text-small text-slate-400">{labels.address}</p>
-          <DemoBadge label={labels.badgeLabel} tooltip={labels.badgeTooltip} />
+          {liveControl}
         </div>
         <div className="flex flex-col gap-3">
           {cards}
           {chart}
           {devicesPanel}
           {alertsPanel}
-          <div className="flex justify-end">{liveControl}</div>
         </div>
       </div>
     );
@@ -377,20 +379,19 @@ export function IoTDashboardPreview({
       lastTemp={lastTemp}
       liveControl={liveControl}
     >
-      {/* minmax(0, ...) lets every column shrink below its content width; plain 1fr does not,
-          which pushed the frame past its container (audit issue 18). */}
-      <div className="grid min-h-0 grid-cols-[56px_minmax(0,1fr)] xl:h-full xl:grid-cols-[200px_minmax(0,1fr)]">
+      {/* Compact density (improvement run 2): icon sidebar, then status cards (2 by 2) and a
+          180px chart beside the devices (three rows, internal scroll) and alerts. minmax(0, ...)
+          lets every column shrink below its content width (audit issue 18). */}
+      <div className="dashboard-compact grid min-h-0 grid-cols-[48px_minmax(0,1fr)]">
         <DashboardSidebar items={labels.sidebar} />
-        <div className="flex min-h-0 min-w-0 flex-col gap-3 p-3 xl:p-4">
-          {cards}
-          {/* xl: chart beside devices and alerts inside the 16:10 frame. Below xl: chart full width,
-              then devices and alerts side by side at their natural height. */}
-          <div className="grid min-w-0 gap-3 xl:min-h-0 xl:flex-1 xl:grid-cols-[minmax(0,1.45fr)_minmax(0,1fr)]">
+        <div className="grid min-w-0 grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)] items-start gap-2 p-2.5">
+          <div className="flex min-w-0 flex-col gap-2">
+            {cards}
             {chart}
-            <div className="grid min-w-0 gap-3 md:grid-cols-2 md:items-start xl:flex xl:min-h-0 xl:flex-col xl:items-stretch">
-              {devicesPanel}
-              {alertsPanel}
-            </div>
+          </div>
+          <div className="flex min-w-0 flex-col gap-2">
+            {devicesPanel}
+            {alertsPanel}
           </div>
         </div>
       </div>
@@ -424,14 +425,14 @@ function DesktopFrame({
 
   return (
     // Extra space above and below at xl holds the floating panels outside the frame's content.
-    <div ref={ref} className="relative xl:pt-12 xl:pb-10">
+    <div ref={ref} className="relative xl:pt-12 xl:pb-16">
       <div className="relative">
         <div
           role="group"
           aria-label="IoTDataHub demo dashboard with simulated data"
-          className="relative w-full overflow-hidden rounded-frame border border-line-dark bg-navy-950 shadow-highlight xl:aspect-[16/10]"
+          className="relative w-full overflow-hidden rounded-frame border border-line-dark bg-navy-950 shadow-highlight"
         >
-          <div className="flex h-10 items-center gap-3 border-b border-line-dark bg-navy-900 px-4">
+          <div className="flex h-10 items-center gap-3 border-b border-line-dark bg-navy-900 pr-1 pl-4">
             <span aria-hidden="true" className="flex gap-1.5">
               <span className="size-2 rounded-full bg-slate-400/40" />
               <span className="size-2 rounded-full bg-slate-400/40" />
@@ -440,17 +441,10 @@ function DesktopFrame({
             <span className="mx-auto rounded-tag bg-navy-950/70 px-6 py-0.5 font-mono text-small text-slate-400">
               {labels.address}
             </span>
-            <span className="w-12" aria-hidden="true" />
+            {liveControl}
           </div>
-          <div className="xl:h-[calc(100%-40px)]">{children}</div>
+          <div>{children}</div>
         </div>
-
-        {/* Persistent demo badge, pinned to the top right of the frame at every step. */}
-        <DemoBadge
-          label={labels.badgeLabel}
-          tooltip={labels.badgeTooltip}
-          className="absolute -top-5 right-4 z-20"
-        />
 
         {/* Floating panels: decorative depth layers, hidden from assistive technology. They sit over
           the browser chrome (top) and below the frame's bottom edge, never over dashboard content
@@ -480,7 +474,7 @@ function DesktopFrame({
         <motion.div
           aria-hidden="true"
           style={reduced ? {} : { y: nearY }}
-          className="absolute top-[calc(100%-12px)] right-6 z-10 hidden xl:block"
+          className="absolute top-[calc(100%+12px)] right-6 z-10 hidden xl:block"
         >
           <div
             className={cn(
@@ -492,7 +486,7 @@ function DesktopFrame({
               <Thermometer size={16} strokeWidth={ICON_STROKE} className="text-cyan-400" /> Live
               reading
             </span>
-            <span className="tabular mt-1 block font-mono text-h3 text-cloud-50">
+            <span className="tabular mt-1 block font-mono text-reading text-cloud-50">
               {formatValue(lastTemp, "temperature")} °C
             </span>
           </div>
@@ -525,8 +519,6 @@ function DesktopFrame({
           </svg>
         ) : null}
       </div>
-
-      <div className="mt-3 flex justify-start">{liveControl}</div>
     </div>
   );
 }

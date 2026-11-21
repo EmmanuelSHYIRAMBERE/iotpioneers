@@ -7,7 +7,6 @@ import * as contact from "@/content/contact";
 import * as dataHub from "@/content/dataHub";
 import * as hero from "@/content/hero";
 import * as images from "@/content/images";
-import * as marquee from "@/content/marquee";
 import * as navigation from "@/content/navigation";
 import * as pathTable from "@/content/pathTable";
 import * as principles from "@/content/principles";
@@ -21,7 +20,6 @@ export const contentModules: Record<string, Record<string, unknown>> = {
   navigation,
   hero,
   images,
-  marquee,
   about,
   solutions,
   dataHub,

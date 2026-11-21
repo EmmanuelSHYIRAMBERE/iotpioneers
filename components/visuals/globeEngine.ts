@@ -6,6 +6,7 @@
  * spin 0; increasing spin turns the globe west to east (the visible surface moves right).
  */
 import { globe } from "@/lib/motion";
+import { createSeededRandom } from "@/lib/seededRandom";
 import { colors, hexToRgb } from "@/lib/tokens";
 
 export interface Vec3 {
@@ -210,9 +211,24 @@ export function packetTimings(count: number): { periodMs: number; offsetMs: numb
 export interface GlobeFrame {
   timeMs: number;
   orientation: Orientation;
-  /** Draw travelling packets and the Kigali ring (false for the static frame). */
+  /** Draw travelling packets and the Kigali ring (false for the static and gentle frames). */
   animated: boolean;
+  /** Draw orbit paths (icons are DOM elements positioned from `orbitBodies`). Default true. */
+  orbits?: boolean;
+  /** Spawn and draw edge connections between orbit icons and the globe rim. Default false. */
+  edges?: boolean;
 }
+
+/** A short-lived link from an orbit icon to a land point near the globe's front rim. */
+interface EdgeLink {
+  orbit: number;
+  /** Index of the land point (into the point array, multiple of 3). */
+  point: number;
+  startMs: number;
+}
+
+/** Front points whose depth is below this sit near the rim (candidate edge targets). */
+const RIM_DEPTH = 0.3;
 
 export interface OrbitBody {
   x: number;
@@ -254,6 +270,11 @@ export class GlobeRenderer {
   private readonly frontPaths: Path2D[] = [];
   private size = 0;
   private dpr = 1;
+  /** Edge connections in flight, the next spawn time and the rim candidates from the last frame. */
+  private links: EdgeLink[] = [];
+  private nextEdgeMs = 0;
+  private readonly random = createSeededRandom(11);
+  private rim: number[] = [];
 
   constructor(ctx: CanvasRenderingContext2D, points: Float32Array, options: RendererOptions) {
     this.ctx = ctx;
@@ -308,7 +329,8 @@ export class GlobeRenderer {
     ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
     ctx.clearRect(0, 0, size, size);
 
-    if (this.options.orbits) this.drawOrbits(frame, c, r, true);
+    const orbits = this.options.orbits && frame.orbits !== false;
+    if (orbits) this.drawOrbits(frame, c, r, true);
 
     // Disc: navy body with a soft shade toward the lower right, so far-side items read as behind.
     const body = ctx.createRadialGradient(c - r * 0.35, c - r * 0.35, r * 0.1, c, c, r);
@@ -331,7 +353,88 @@ export class GlobeRenderer {
     this.drawArcs(frame, c, r);
     this.drawKigali(frame, c, r);
 
-    if (this.options.orbits) this.drawOrbits(frame, c, r, false);
+    if (orbits) this.drawOrbits(frame, c, r, false);
+    if (orbits && frame.edges === true) this.drawEdges(frame, c, r);
+    else this.links = [];
+  }
+
+  /** Number of edge connections currently drawn (for tests and diagnostics). */
+  get edgeCount(): number {
+    return this.links.length;
+  }
+
+  /**
+   * Edge connections: every 2 to 4 seconds an orbit icon in front of the globe links to the
+   * nearest land point near the front rim. A brightGold packet travels the line, then the line
+   * fades out over 1 second. At most `globe.edgeMax` links exist at once.
+   */
+  private drawEdges(frame: GlobeFrame, c: number, r: number): void {
+    const { ctx } = this;
+    const now = frame.timeMs;
+    const bodies = this.orbitBodies(frame);
+    const life = globe.edgeTravelMs + globe.edgeFadeMs;
+    this.links = this.links.filter((link) => now - link.startMs < life && now >= link.startMs);
+
+    if (now >= this.nextEdgeMs) {
+      const span = globe.edgeEveryMaxMs - globe.edgeEveryMinMs;
+      this.nextEdgeMs = now + globe.edgeEveryMinMs + this.random() * span;
+      if (this.links.length < globe.edgeMax) {
+        const free = bodies
+          .map((body, index) => ({ body, index }))
+          .filter(({ body, index }) => !body.behind && !this.links.some((l) => l.orbit === index));
+        const pick = free[Math.floor(this.random() * free.length)];
+        if (pick) {
+          let best = -1;
+          let bestDistance = Infinity;
+          for (let i = 0; i < this.rim.length; i += 3) {
+            const dx = (this.rim[i] ?? 0) - pick.body.x;
+            const dy = (this.rim[i + 1] ?? 0) - pick.body.y;
+            const d = dx * dx + dy * dy;
+            if (d < bestDistance) {
+              bestDistance = d;
+              best = this.rim[i + 2] ?? -1;
+            }
+          }
+          if (best >= 0) this.links.push({ orbit: pick.index, point: best, startMs: now });
+        }
+      }
+    }
+
+    ctx.lineWidth = 1;
+    for (const link of this.links) {
+      const body = bodies[link.orbit];
+      if (!body) continue;
+      const p = this.project(
+        this.points[link.point] ?? 0,
+        this.points[link.point + 1] ?? 0,
+        this.points[link.point + 2] ?? 0,
+        frame.orientation,
+      );
+      if (p.z < 0) continue;
+      const tx = c + p.x * r;
+      const ty = c - p.y * r;
+      const age = now - link.startMs;
+      const travel = Math.min(1, age / globe.edgeTravelMs);
+      const fade =
+        age <= globe.edgeTravelMs ? 1 : 1 - (age - globe.edgeTravelMs) / globe.edgeFadeMs;
+      ctx.strokeStyle = rgba(CYAN, 0.45 * fade);
+      ctx.beginPath();
+      ctx.moveTo(body.x, body.y);
+      ctx.lineTo(tx, ty);
+      ctx.stroke();
+      if (age <= globe.edgeTravelMs) {
+        ctx.fillStyle = rgba(GOLD, 0.95);
+        ctx.beginPath();
+        ctx.arc(
+          body.x + (tx - body.x) * travel,
+          body.y + (ty - body.y) * travel,
+          1.75,
+          0,
+          Math.PI * 2,
+        );
+        ctx.fill();
+      }
+    }
   }
 
   private drawDots(o: Orientation, c: number, r: number): void {
@@ -341,6 +444,8 @@ export class GlobeRenderer {
     const cosT = Math.cos(o.tilt);
     const sinT = Math.sin(o.tilt);
     const front: Path2D[] = this.frontPaths;
+    // Front points near the rim, as [x, y, pointIndex] triples (edge connection targets).
+    const rim: number[] = [];
     const back: Path2D[] = [];
     for (let b = 0; b < BUCKETS; b += 1) {
       front[b] = new Path2D();
@@ -360,6 +465,7 @@ export class GlobeRenderer {
       const sx = c + x1 * r;
       const sy = c - y2 * r;
       if (z2 >= 0) {
+        if (z2 < RIM_DEPTH) rim.push(sx, sy, i);
         // Front: fade in near the edge.
         const k = Math.min(1, z2 / 0.35);
         const b = Math.min(BUCKETS - 1, Math.floor(k * BUCKETS));
@@ -372,6 +478,7 @@ export class GlobeRenderer {
         back[b]?.rect(sx - half, sy - half, 1.2, 1.2);
       }
     }
+    this.rim = rim;
     for (let b = 0; b < BUCKETS; b += 1) {
       const path = back[b];
       if (!path) continue;

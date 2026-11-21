@@ -172,20 +172,6 @@ export const contentSchemas: Record<string, z.ZodType> = {
     title: z.string().min(1),
     intro: visibleString,
   }),
-  "hero.valueStrip": z
-    .array(
-      verifiableSchema.extend({
-        id: z.enum(["engineering", "iotdatahub", "shop"]),
-        title: visibleString,
-        text: visibleString,
-        icon: z.enum(["engineering", "datahub", "shop"]),
-        href: z.string().startsWith("#"),
-        linkLabel: z.string().min(1),
-        linkAccessibleName: z.string().min(1),
-      }),
-    )
-    .length(3),
-  "hero.valueStripTitle": z.string().min(1),
   "pathTable.pathHeading": verifiableSchema.extend({
     eyebrow: z.string().min(1),
     title: z.string().min(1),

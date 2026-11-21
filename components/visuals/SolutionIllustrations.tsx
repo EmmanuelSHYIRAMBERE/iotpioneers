@@ -49,6 +49,17 @@ const fillClass: Record<Accent, string> = {
   gold: "fill-deep-gold",
   cyan: "fill-cyan-700",
 };
+/** Dark panel tone (improvement run 2): brightGold and cyan lines over the navy photo overlay. */
+const darkAccentClass: Record<Accent, string> = {
+  ink: "stroke-bright-gold",
+  gold: "stroke-bright-gold",
+  cyan: "stroke-cyan-400",
+};
+const darkFillClass: Record<Accent, string> = {
+  ink: "fill-bright-gold",
+  gold: "fill-bright-gold",
+  cyan: "fill-cyan-400",
+};
 
 const DRAWINGS: Record<IllustrationKey, Drawing> = {
   iot: {
@@ -178,6 +189,8 @@ export interface SolutionIllustrationProps {
   animated: boolean;
   /** Pulses run only while the panel is visible. */
   pulsing: boolean;
+  /** "light": ink drawing on a light panel. "dark": 2px brightGold and cyan lines on navy. */
+  tone?: "light" | "dark";
   className?: string;
 }
 
@@ -190,9 +203,14 @@ export function SolutionIllustration({
   kind,
   animated,
   pulsing,
+  tone = "light",
   className,
 }: SolutionIllustrationProps) {
   const drawing = DRAWINGS[kind];
+  const dark = tone === "dark";
+  const stroke = dark ? darkAccentClass : accentClass;
+  const fill = dark ? darkFillClass : fillClass;
+  const width = dark ? "2" : "1.5";
   return (
     <svg
       viewBox={drawing.viewBox}
@@ -201,16 +219,16 @@ export function SolutionIllustration({
       aria-label={drawing.title}
       className={cn("h-full w-full", className)}
     >
-      {drawing.strokes.map((stroke, index) => (
+      {drawing.strokes.map((line, index) => (
         <motion.path
           key={`${kind}-s${String(index)}`}
-          d={stroke.d}
-          className={accentClass[stroke.accent ?? "ink"]}
-          strokeWidth="1.5"
+          d={line.d}
+          className={stroke[line.accent ?? "ink"]}
+          strokeWidth={width}
           strokeLinecap="round"
           strokeLinejoin="round"
-          strokeDasharray={stroke.dashed ? "4 5" : undefined}
-          initial={animated && !stroke.dashed ? { pathLength: 0 } : false}
+          strokeDasharray={line.dashed ? "4 5" : undefined}
+          initial={animated && !line.dashed ? { pathLength: 0 } : false}
           animate={{ pathLength: 1 }}
           transition={{
             duration: s(timing.illustrationDraw),
@@ -225,10 +243,10 @@ export function SolutionIllustration({
           cx={node.x}
           cy={node.y}
           r={node.r ?? 4}
-          strokeWidth="1.5"
+          strokeWidth={width}
           className={cn(
-            accentClass[node.accent ?? "ink"],
-            node.filled ? fillClass[node.accent ?? "ink"] : "fill-white",
+            stroke[node.accent ?? "ink"],
+            node.filled ? fill[node.accent ?? "ink"] : dark ? "fill-navy-900" : "fill-white",
           )}
           initial={animated ? { opacity: 0 } : false}
           animate={{ opacity: 1 }}
@@ -243,25 +261,28 @@ export function SolutionIllustration({
           key={label.text}
           x={label.x}
           y={label.y}
-          className="fill-slate-600 font-mono text-[13px] tracking-[0.12em]"
+          className={cn(
+            "font-mono text-[13px] tracking-[0.12em]",
+            dark ? "fill-cloud-50" : "fill-slate-600",
+          )}
         >
           {label.text}
         </text>
       ))}
       {animated && pulsing
         ? drawing.strokes
-            .filter((stroke) => stroke.accent === "gold" && !/z\s*$/i.test(stroke.d))
-            .map((stroke, index) => {
+            .filter((line) => line.accent === "gold" && !/z\s*$/i.test(line.d))
+            .map((line, index) => {
               const begin = `${String(s(timing.illustrationDraw) + index * 0.35)}s`;
               const dur = `${String(s(runTiming.illustrationPulse))}s`;
               return (
                 <circle
                   key={`${kind}-p${String(index)}`}
                   r="3.5"
-                  className="fill-deep-gold"
+                  className={dark ? "fill-bright-gold" : "fill-deep-gold"}
                   opacity="0"
                 >
-                  <animateMotion path={stroke.d} begin={begin} dur={dur} repeatCount="indefinite" />
+                  <animateMotion path={line.d} begin={begin} dur={dur} repeatCount="indefinite" />
                   <animate
                     attributeName="opacity"
                     values="0;1;1;0"

@@ -2,8 +2,8 @@
 
 import { useEffect, useRef, useState, type KeyboardEvent } from "react";
 import Image from "next/image";
-import { AnimatePresence, motion, useScroll, useTransform } from "motion/react";
-import { ArrowRight, Minus, Plus } from "lucide-react";
+import { AnimatePresence, motion } from "motion/react";
+import { ArrowRight } from "lucide-react";
 import { solutionImages } from "@/content/images";
 import type { Solution } from "@/content/types";
 import { VerifyMarker } from "@/components/ui/VerifyMarker";
@@ -15,13 +15,10 @@ import { cn } from "@/lib/cn";
 import {
   ease,
   enterLeft,
-  enterRight,
-  runDistance,
   runStagger,
   runTiming,
   s,
   staggerDelay,
-  timing,
   viewportAmount,
 } from "@/lib/motion";
 import { ICON_STROKE } from "@/lib/tokens";
@@ -30,41 +27,180 @@ export interface SolutionsIndexClientProps {
   solutions: readonly Solution[];
 }
 
+/** Two digit position, for the panel's "02 / 05" progress. */
+function pad(value: number): string {
+  return String(value).padStart(2, "0");
+}
+
 /**
- * Capability index. Rows follow the WAI-ARIA accordion pattern (buttons with aria-expanded and
- * labelled regions) with Arrow Up/Down, Home and End moving between rows. One row is open at a
- * time; the first starts open. At lg a sticky panel shows the open row's illustration, and
- * hovering a row previews its illustration after 80ms without opening it.
+ * The capability panel (improvement run 2, task 7): a navy900 frame with the capability photo at
+ * full colour under a navy gradient (60% at the top, 90% at the bottom, so every text pair passes
+ * AA; measurements in docs/05), a header row (FIG, name, progress), the line drawing in brightGold
+ * and cyan with travelling packets, and the deliverables as gold outline tags. Decorative here:
+ * the list beside it carries the same content for assistive technology.
+ */
+function CapabilityPanel({
+  solution,
+  position,
+  total,
+  animated,
+  pulsing,
+  className,
+}: {
+  solution: Solution;
+  position: number;
+  total: number;
+  animated: boolean;
+  pulsing: boolean;
+  className?: string;
+}) {
+  const photo = solutionImages[solution.id];
+  return (
+    <div
+      aria-hidden="true"
+      data-capability-panel={solution.id}
+      className={cn(
+        "relative isolate flex flex-col overflow-hidden rounded-frame bg-navy-900 text-cloud-50 shadow-hover",
+        className,
+      )}
+    >
+      {photo?.src ? (
+        <Image
+          src={photo.src}
+          alt=""
+          fill
+          sizes="(min-width: 1024px) 40vw, 100vw"
+          className="-z-20 object-cover"
+        />
+      ) : null}
+      <div className="absolute inset-0 -z-10 bg-linear-to-b from-navy-950/60 via-navy-950/70 to-navy-950/90" />
+
+      <div className="flex items-center justify-between gap-3 px-5 pt-5">
+        <p className="label-mono min-w-0 truncate text-cloud-50">
+          FIG. {solution.index} · {solution.title}
+        </p>
+        <div className="flex shrink-0 items-center gap-2">
+          <span className="label-mono text-cloud-50">
+            {pad(position)} / {pad(total)}
+          </span>
+          <span className="flex gap-1">
+            {Array.from({ length: total }, (_, index) => (
+              <span
+                key={index}
+                className={cn(
+                  "size-1.5 rounded-full",
+                  index + 1 === position ? "bg-bright-gold" : "bg-cloud-50/30",
+                )}
+              />
+            ))}
+          </span>
+        </div>
+      </div>
+
+      <div className="flex min-h-0 flex-1 items-center justify-center px-6 py-4">
+        <SolutionIllustration
+          kind={solution.illustration}
+          tone="dark"
+          animated={animated}
+          pulsing={pulsing}
+          className="max-h-full"
+        />
+      </div>
+
+      <ul className="flex flex-wrap gap-2 px-5 pb-5">
+        {solution.deliverables.map((item) => (
+          <li
+            key={item}
+            className="rounded-tag border border-bright-gold/60 px-2 py-0.5 font-mono text-small text-bright-gold"
+          >
+            {item}
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+function DiscussLink({ solution }: { solution: Solution }) {
+  return (
+    <a
+      href="#contact"
+      className="group/link mt-6 inline-flex min-h-11 items-center gap-2 font-medium text-deep-gold"
+    >
+      {solution.ctaLabel}
+      <ArrowRight
+        aria-hidden="true"
+        size={16}
+        strokeWidth={ICON_STROKE}
+        className="transition-transform duration-200 group-hover/link:translate-x-1"
+      />
+    </a>
+  );
+}
+
+function Deliverables({ items }: { items: readonly string[] }) {
+  return (
+    <ul aria-label="Example deliverables" className="mt-5 flex flex-wrap gap-2">
+      {items.map((item) => (
+        <li
+          key={item}
+          className="rounded-tag bg-slate-100 px-2.5 py-1 font-mono text-small text-navy-950"
+        >
+          {item}
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+/**
+ * "What we engineer" as a scroll story (improvement run 2, task 7).
+ * - lg and up: the five capabilities scroll past on the left; the one crossing the middle of the
+ *   viewport (IntersectionObserver on a centre line) expands and gets the gold bar, and the sticky
+ *   panel on the right follows it. CSS position sticky only: no scroll hijacking. The panel releases
+ *   when the last item has scrolled up. Clicking or pressing Enter on an item scrolls it to the
+ *   middle and makes it active; arrow keys move between items.
+ * - Below lg: five stacked cards, each with its panel above its text.
+ * - Reduced motion: no packets or stroke drawing; the active item still follows the scroll.
  */
 export function SolutionsIndexClient({ solutions }: SolutionsIndexClientProps) {
-  const [openId, setOpenId] = useState<string>(solutions[0]?.id ?? "");
-  const [previewId, setPreviewId] = useState<string | null>(null);
-  const hoverTimer = useRef<number | undefined>(undefined);
-  const buttons = useRef<(HTMLButtonElement | null)[]>([]);
-  const panelRef = useRef<HTMLDivElement>(null);
   const desktop = useMediaQuery(mediaQueries.lg);
   const reduced = useReducedMotionPreference();
+  const [activeId, setActiveId] = useState(solutions[0]?.id ?? "");
+  const items = useRef<(HTMLLIElement | null)[]>([]);
+  const buttons = useRef<(HTMLButtonElement | null)[]>([]);
+  const panelRef = useRef<HTMLDivElement>(null);
   const panelInView = useInView(panelRef);
-  const columnRef = useRef<HTMLDivElement>(null);
-  // The stand-in photo behind the drawing drifts 30px with scroll (not with reduced motion). The
-  // scroll target is the always-rendered grid: the panel itself only exists at lg and up.
-  const { scrollYProgress } = useScroll({ target: columnRef, offset: ["start end", "end start"] });
-  const photoY = useTransform(
-    scrollYProgress,
-    [0, 1],
-    [runDistance.parallaxSmall, -runDistance.parallaxSmall],
-  );
   const start = reduced ? false : "hidden";
 
-  useEffect(
-    () => () => {
-      window.clearTimeout(hoverTimer.current);
-    },
-    [],
-  );
+  // The item crossing the horizontal centre line of the viewport is the active one.
+  useEffect(() => {
+    if (!desktop) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (!entry.isIntersecting) continue;
+          const id = (entry.target as HTMLElement).dataset.solutionId;
+          if (id) setActiveId(id);
+        }
+      },
+      { rootMargin: "-50% 0px -50% 0px", threshold: 0 },
+    );
+    items.current.forEach((item) => {
+      if (item) observer.observe(item);
+    });
+    return () => {
+      observer.disconnect();
+    };
+  }, [desktop, solutions.length]);
 
-  const shownId = previewId ?? openId;
-  const shown = solutions.find((item) => item.id === shownId) ?? solutions[0];
+  const activate = (index: number): void => {
+    const solution = solutions[index];
+    const item = items.current[index];
+    if (!solution || !item) return;
+    setActiveId(solution.id);
+    item.scrollIntoView({ block: "center", behavior: reduced ? "auto" : "smooth" });
+  };
 
   const onKeyDown = (event: KeyboardEvent<HTMLButtonElement>, index: number): void => {
     const count = solutions.length;
@@ -78,195 +214,170 @@ export function SolutionsIndexClient({ solutions }: SolutionsIndexClientProps) {
     buttons.current[next]?.focus();
   };
 
+  const activeIndex = Math.max(
+    0,
+    solutions.findIndex((item) => item.id === activeId),
+  );
+  const active = solutions[activeIndex];
+
+  if (!desktop) {
+    return (
+      <ol className="flex flex-col gap-10">
+        {solutions.map((solution, index) => (
+          <motion.li
+            key={solution.id}
+            initial={start}
+            whileInView="visible"
+            viewport={{ once: true, amount: viewportAmount.cards }}
+            variants={enterLeft(true)}
+          >
+            <VerifyMarker verified={solution.verified}>
+              <CapabilityPanel
+                solution={solution}
+                position={index + 1}
+                total={solutions.length}
+                animated={!reduced}
+                pulsing
+                className="aspect-[4/3]"
+              />
+              <h3 className="mt-5 flex items-baseline gap-4">
+                <span className="font-mono text-small text-slate-600">{solution.index}</span>
+                <span className="font-display text-row-title text-navy-950">{solution.title}</span>
+              </h3>
+              <p className="mt-3 max-w-prose text-body text-slate-600">{solution.summary}</p>
+              <Deliverables items={solution.deliverables} />
+              <DiscussLink solution={solution} />
+            </VerifyMarker>
+          </motion.li>
+        ))}
+      </ol>
+    );
+  }
+
   return (
-    <div ref={columnRef} className="grid-page gap-y-12">
-      <ul className="col-span-full border-t border-slate-200 lg:col-span-6">
+    <div className="grid-page">
+      <ol className="col-span-6 border-t border-slate-200">
         {solutions.map((solution, index) => {
-          const open = solution.id === openId;
+          const open = solution.id === active?.id;
           const headerId = `solution-${solution.id}-header`;
           const panelId = `solution-${solution.id}-panel`;
           return (
-            // Rows enter from the left with a 60ms stagger.
-            <motion.li
+            <li
               key={solution.id}
-              className="relative border-b border-slate-200"
-              initial={start}
-              whileInView="visible"
-              viewport={{ once: true, amount: viewportAmount.reveal }}
-              variants={enterLeft(!desktop, staggerDelay(index, runStagger.solutionRows))}
-              onMouseEnter={() => {
-                if (!desktop) return;
-                window.clearTimeout(hoverTimer.current);
-                hoverTimer.current = window.setTimeout(() => {
-                  setPreviewId(solution.id);
-                }, timing.hoverPreviewDelay);
+              ref={(node) => {
+                items.current[index] = node;
               }}
-              onMouseLeave={() => {
-                window.clearTimeout(hoverTimer.current);
-                setPreviewId(null);
-              }}
+              data-solution-id={solution.id}
+              data-active={open || undefined}
+              // Each item reserves enough height for its expanded content, so expanding never
+              // shifts the list while scrolling (and the centre line meets one item at a time).
+              className="relative flex min-h-[46svh] flex-col justify-center border-b border-slate-200"
             >
-              {/* Active bar grows from the left edge. */}
-              <motion.span
-                aria-hidden="true"
-                className="absolute top-0 bottom-0 left-0 w-0.5 origin-top bg-deep-gold"
-                initial={false}
-                animate={{ scaleY: open ? 1 : 0 }}
-                transition={{ duration: s(timing.solutionBar), ease: ease.outExpo }}
-              />
-              <VerifyMarker verified={solution.verified}>
-                <h3>
-                  <button
-                    ref={(node) => {
-                      buttons.current[index] = node;
-                    }}
-                    id={headerId}
-                    type="button"
-                    aria-expanded={open}
-                    aria-controls={panelId}
-                    onClick={() => {
-                      setOpenId(open ? "" : solution.id);
-                    }}
-                    onKeyDown={(event) => {
-                      onKeyDown(event, index);
-                    }}
-                    className="group flex min-h-11 w-full items-center gap-5 py-6 pr-1 pl-5 text-left md:gap-6 md:py-7"
-                  >
-                    <span className="font-mono text-small text-slate-600">{solution.index}</span>
-                    <span
-                      className={cn(
-                        "flex-1 font-display text-row-title transition-colors duration-200",
-                        open ? "text-deep-gold" : "text-navy-950 group-hover:text-deep-gold",
-                      )}
-                    >
-                      {solution.title}
-                    </span>
-                    <span
-                      aria-hidden="true"
-                      className={cn(
-                        "flex size-9 shrink-0 items-center justify-center rounded-full border transition-colors duration-200",
-                        open ? "border-deep-gold text-deep-gold" : "border-slate-300 text-navy-950",
-                      )}
-                    >
-                      {open ? (
-                        <Minus size={16} strokeWidth={ICON_STROKE} />
-                      ) : (
-                        <Plus size={16} strokeWidth={ICON_STROKE} />
-                      )}
-                    </span>
-                  </button>
-                </h3>
-                <AnimatePresence initial={false}>
-                  {open ? (
-                    <motion.div
-                      id={panelId}
-                      role="region"
-                      aria-labelledby={headerId}
-                      initial={{ height: 0, opacity: 0 }}
-                      animate={{ height: "auto", opacity: 1 }}
-                      exit={{ height: 0, opacity: 0 }}
-                      transition={{
-                        duration: reduced ? 0 : s(timing.solutionPanel),
-                        ease: ease.outExpo,
+              <motion.div
+                className="relative"
+                initial={start}
+                whileInView="visible"
+                viewport={{ once: true, amount: viewportAmount.reveal }}
+                variants={enterLeft(false, staggerDelay(index, runStagger.solutionRows))}
+              >
+                {/* Gold left bar on the active item. */}
+                <motion.span
+                  aria-hidden="true"
+                  className="absolute top-0 bottom-0 left-0 w-0.5 origin-top bg-deep-gold"
+                  initial={false}
+                  animate={{ scaleY: open ? 1 : 0 }}
+                  transition={{ duration: s(runTiming.illustrationCrossfade), ease: ease.outExpo }}
+                />
+                <VerifyMarker verified={solution.verified}>
+                  <h3>
+                    <button
+                      ref={(node) => {
+                        buttons.current[index] = node;
                       }}
-                      className="overflow-hidden"
+                      id={headerId}
+                      type="button"
+                      aria-expanded={open}
+                      aria-controls={panelId}
+                      onClick={() => {
+                        activate(index);
+                      }}
+                      onKeyDown={(event) => {
+                        onKeyDown(event, index);
+                      }}
+                      className="group flex min-h-11 w-full items-center gap-6 py-4 pr-1 pl-5 text-left"
                     >
-                      <div className="pr-1 pb-8 pl-5 md:pl-[4.25rem]">
-                        {!desktop ? (
-                          <div className="mb-6 aspect-video overflow-hidden rounded-card border border-slate-200 bg-cloud-50 p-4">
-                            <SolutionIllustration
-                              kind={solution.illustration}
-                              animated={!reduced}
-                              pulsing
-                            />
-                          </div>
-                        ) : null}
+                      <span className="font-mono text-small text-slate-600">{solution.index}</span>
+                      <span
+                        className={cn(
+                          "flex-1 font-display text-row-title transition-colors duration-200",
+                          open ? "text-deep-gold" : "text-navy-950 group-hover:text-deep-gold",
+                        )}
+                      >
+                        {solution.title}
+                      </span>
+                    </button>
+                  </h3>
+                  <AnimatePresence initial={false}>
+                    {open ? (
+                      <motion.div
+                        id={panelId}
+                        role="region"
+                        aria-labelledby={headerId}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{
+                          duration: reduced ? 0 : s(runTiming.illustrationCrossfade),
+                          ease: ease.standard,
+                        }}
+                        className="pr-1 pb-6 pl-[4.25rem]"
+                      >
                         <p className="max-w-prose text-body text-slate-600">{solution.summary}</p>
-                        <ul aria-label="Example deliverables" className="mt-5 flex flex-wrap gap-2">
-                          {solution.deliverables.map((item) => (
-                            <li
-                              key={item}
-                              className="rounded-tag bg-slate-100 px-2.5 py-1 font-mono text-small text-navy-950"
-                            >
-                              {item}
-                            </li>
-                          ))}
-                        </ul>
-                        <a
-                          href="#contact"
-                          className="group/link mt-6 inline-flex min-h-11 items-center gap-2 font-medium text-deep-gold"
-                        >
-                          {solution.ctaLabel}
-                          <ArrowRight
-                            aria-hidden="true"
-                            size={16}
-                            strokeWidth={ICON_STROKE}
-                            className="transition-transform duration-200 group-hover/link:translate-x-1"
-                          />
-                        </a>
-                      </div>
-                    </motion.div>
-                  ) : null}
-                </AnimatePresence>
-              </VerifyMarker>
-            </motion.li>
+                        <Deliverables items={solution.deliverables} />
+                        <DiscussLink solution={solution} />
+                      </motion.div>
+                    ) : null}
+                  </AnimatePresence>
+                </VerifyMarker>
+              </motion.div>
+            </li>
           );
         })}
-      </ul>
+      </ol>
 
-      {desktop && shown ? (
-        // The illustration panel sits in the right column, so it enters from the right.
-        <motion.div
-          className="hidden lg:col-span-5 lg:col-start-8 lg:block"
-          initial={start}
-          whileInView="visible"
-          viewport={{ once: true, amount: viewportAmount.reveal }}
-          variants={enterRight(false)}
+      {/* Sticky panel: stays centred while the list scrolls past and changes with the active item. */}
+      <div className="col-span-5 col-start-8">
+        <div
+          ref={panelRef}
+          data-solutions-panel=""
+          className="sticky top-[calc(50svh-min(34svh,270px))] h-[min(68svh,540px)]"
         >
-          <div
-            ref={panelRef}
-            className="bg-dot-grid sticky top-[120px] aspect-[4/3] overflow-hidden rounded-card border border-slate-200 bg-cloud-50 px-6 pt-12 pb-6"
-          >
-            {/* Stand-in photo behind the drawing at 15% opacity (decorative, imagery-stand-ins). */}
-            {solutionImages[shown.id]?.src ? (
-              <motion.div
-                aria-hidden="true"
-                className="pointer-events-none absolute inset-x-0 -inset-y-8"
-                style={reduced ? {} : { y: photoY }}
-              >
-                <Image
-                  key={`photo-${shown.id}`}
-                  src={solutionImages[shown.id]?.src ?? ""}
-                  alt=""
-                  fill
-                  sizes="(min-width: 1280px) 520px, 40vw"
-                  className="object-cover opacity-15"
-                />
-              </motion.div>
-            ) : null}
-            <p className="absolute top-5 left-6 z-10 rounded-tag bg-cloud-50 px-1 font-mono text-small text-slate-600">
-              FIG. {shown.index} · {shown.title.toUpperCase()}
-            </p>
-            {/* Selection crossfades the illustration over 300ms (both drawings overlap briefly). */}
+          {active ? (
             <AnimatePresence initial={false}>
               <motion.div
-                key={shown.id}
-                className="absolute inset-x-6 top-12 bottom-6"
+                key={active.id}
+                className="absolute inset-0"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                transition={{ duration: s(runTiming.illustrationCrossfade), ease: ease.standard }}
+                transition={{
+                  duration: reduced ? 0 : s(runTiming.illustrationCrossfade),
+                  ease: ease.standard,
+                }}
               >
-                <SolutionIllustration
-                  kind={shown.illustration}
+                <CapabilityPanel
+                  solution={active}
+                  position={activeIndex + 1}
+                  total={solutions.length}
                   animated={!reduced}
                   pulsing={panelInView}
+                  className="h-full"
                 />
               </motion.div>
             </AnimatePresence>
-          </div>
-        </motion.div>
-      ) : null}
+          ) : null}
+        </div>
+      </div>
     </div>
   );
 }

@@ -162,6 +162,7 @@ export function DataHubStory({ steps, labels }: DataHubStoryProps) {
             reachedStep={shownReached}
             inView={inView}
           />
+          <p className="mt-3 text-small text-slate-400">{labels.caption}</p>
         </div>
       </div>
     );
@@ -184,7 +185,7 @@ export function DataHubStory({ steps, labels }: DataHubStoryProps) {
               ))}
             </ol>
           ) : (
-            <div className="col-span-4 flex gap-6">
+            <div className="col-span-5 flex gap-6">
               {mode === "pinned" ? (
                 <StepRail
                   steps={steps.length}
@@ -212,7 +213,12 @@ export function DataHubStory({ steps, labels }: DataHubStoryProps) {
               </ol>
             </div>
           )}
-          <div className={cn("col-span-full", sideBySide && "col-span-8")}>
+          <div
+            className={cn(
+              "col-span-full mx-auto w-full max-w-dashboard",
+              sideBySide && "col-span-7 mr-0",
+            )}
+          >
             <IoTDashboardPreview
               labels={labels}
               seed={DEMO_SEED}
@@ -221,6 +227,7 @@ export function DataHubStory({ steps, labels }: DataHubStoryProps) {
               reachedStep={shownReached}
               inView={inView}
             />
+            <p className="mt-3 text-small text-slate-400">{labels.caption}</p>
           </div>
         </div>
       </div>

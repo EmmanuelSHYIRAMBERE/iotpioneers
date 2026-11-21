@@ -59,7 +59,7 @@ export function SensorStatusCard({
       {/* Three rows (label, value, status) so nothing competes for width and nothing is
           truncated (audit issue 19). */}
       <span className="text-small leading-tight text-slate-400">{label}</span>
-      <p className="font-mono text-[clamp(1.25rem,0.9rem+1vw,2rem)] leading-none font-medium text-cloud-50">
+      <p className="font-mono text-reading leading-none font-medium text-cloud-50">
         <TweenNumber value={value} decimals={decimals} instant={instant} />
         <span className="ml-1 text-small text-slate-400">
           {unit}

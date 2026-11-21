@@ -102,6 +102,12 @@ describe("ReduceMotionToggle", () => {
 
 describe("SolutionsIndex", () => {
   it("opens the first row by default and moves between rows with the arrow keys", async () => {
+    // The scroll story with its keyboard list renders at lg and up (improvement run 2, task 7).
+    const original = window.matchMedia.bind(window);
+    vi.spyOn(window, "matchMedia").mockImplementation((query: string) => ({
+      ...original(query),
+      matches: query === "(min-width: 1024px)",
+    }));
     const user = userEvent.setup();
     render(<SolutionsIndexClient solutions={solutions} />);
     const rows = screen
@@ -146,5 +152,15 @@ describe("CategoryTabs", () => {
     all.focus();
     await user.keyboard("{ArrowRight}");
     expect(onChange).toHaveBeenCalledWith("displays");
+  });
+});
+
+describe("SolutionsIndexClient below lg", () => {
+  it("shows every capability as a stacked card with its text", () => {
+    render(<SolutionsIndexClient solutions={solutions} />);
+    for (const solution of solutions) {
+      expect(screen.getByRole("heading", { name: new RegExp(solution.title) })).toBeInTheDocument();
+      expect(screen.getByText(solution.summary)).toBeInTheDocument();
+    }
   });
 });

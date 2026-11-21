@@ -5,7 +5,7 @@ import { Cpu, Thermometer, Wifi, type LucideProps } from "lucide-react";
 import { useInView } from "@/hooks/useInView";
 import { mediaQueries, useMediaQuery } from "@/hooks/useMediaQuery";
 import { usePageVisibility } from "@/hooks/usePageVisibility";
-import { useReducedMotionPreference } from "@/hooks/useReducedMotionPreference";
+import { useManualReducedMotion } from "@/hooks/useReducedMotionPreference";
 import { cn } from "@/lib/cn";
 import { duration, globe, timing } from "@/lib/motion";
 import { ICON_STROKE } from "@/lib/tokens";
@@ -33,15 +33,32 @@ const DRAG_DOMINANCE = 1.5;
 
 type GlobeState = "loading" | "running" | "paused" | "static";
 
+/**
+ * Motion modes (improvement run 2):
+ * - "full": 40s turn, orbits, packets, edge connections, pointer tilt and touch drag.
+ * - "gentle" (system reduced motion): 120s turn with arcs drawn; no orbits, packets or edges.
+ * - "frozen" (footer "Reduce motion" switch): the static frame. This is the pause control.
+ */
+type GlobeMode = "full" | "gentle" | "frozen";
+
+const REDUCED_QUERY = "(prefers-reduced-motion: reduce)";
+
+interface DrawOptions {
+  animated: boolean;
+  orbits: boolean;
+  edges: boolean;
+}
+
 function markState(wrapper: HTMLElement | null, value: GlobeState): void {
   wrapper?.setAttribute("data-globe-state", value);
 }
 
 /**
  * The hero's connected globe (connected-globe-hero skill): Canvas 2D dotted Earth with Kigali as
- * the origin of every arc. Decorative and hidden from assistive technology. Pauses off screen and
- * in hidden tabs; reduced motion renders one static frame with no listeners.
- * `data-globe-state` on the wrapper reports "loading", "running", "paused" or "static".
+ * the origin of every arc. Decorative and hidden from assistive technology. It turns continuously
+ * and only pauses off screen or in a hidden tab, resuming from the same angle. See `GlobeMode` for
+ * the reduced motion behaviour. `data-globe-state` reports "loading", "running", "paused" or
+ * "static"; `data-globe-angle` (radians) and `data-globe-edges` support tests.
  */
 export default function ConnectedGlobe({ compact, className }: ConnectedGlobeProps) {
   const wrapperRef = useRef<HTMLDivElement>(null);
@@ -49,9 +66,11 @@ export default function ConnectedGlobe({ compact, className }: ConnectedGlobePro
   const staticRef = useRef<HTMLDivElement>(null);
   const iconRefs = useRef<(HTMLSpanElement | null)[]>([]);
   const rendererRef = useRef<GlobeRenderer | null>(null);
-  const drawRef = useRef<((animated: boolean) => void) | null>(null);
+  const drawRef = useRef<((options: DrawOptions) => void) | null>(null);
   const stateRef = useRef({
     elapsed: 0,
+    /** Accumulated rotation (radians): pausing or switching modes never jumps. */
+    angle: 0,
     dragSpin: 0,
     velocity: 0,
     tiltOffset: 0,
@@ -61,8 +80,12 @@ export default function ConnectedGlobe({ compact, className }: ConnectedGlobePro
   });
 
   const inView = useInView(wrapperRef, { amount: 0 });
+  const modeRef = useRef<GlobeMode>("full");
   const pageVisible = usePageVisibility();
-  const reduced = useReducedMotionPreference();
+  const manual = useManualReducedMotion();
+  const systemReduced = useMediaQuery(REDUCED_QUERY);
+  const mode: GlobeMode = manual ? "frozen" : systemReduced ? "gentle" : "full";
+  const reduced = mode !== "full";
   const finePointer = useMediaQuery(mediaQueries.finePointer);
 
   // Load the point data lazily and build the renderer.
@@ -83,19 +106,25 @@ export default function ConnectedGlobe({ compact, className }: ConnectedGlobePro
       });
       rendererRef.current = renderer;
 
-      const draw = (animated: boolean): void => {
+      const draw = ({ animated, orbits, edges }: DrawOptions): void => {
         const s = stateRef.current;
         const orientation: Orientation = {
-          spin: spinFacing(globe.kigaliLon) + (s.elapsed / globe.turnMs) * Math.PI * 2 + s.dragSpin,
+          spin: spinFacing(globe.kigaliLon) + s.angle + s.dragSpin,
           tilt: globe.staticTiltDeg * DEG + s.tiltOffset,
           yaw: s.yawOffset,
         };
-        const frame: GlobeFrame = { timeMs: s.elapsed, orientation, animated };
+        const frame: GlobeFrame = { timeMs: s.elapsed, orientation, animated, orbits, edges };
         renderer.draw(frame);
+        wrapper.dataset.globeAngle = s.angle.toFixed(4);
+        wrapper.dataset.globeEdges = String(renderer.edgeCount);
         const bodies = renderer.orbitBodies(frame);
         bodies.forEach((body, index) => {
           const icon = iconRefs.current[index];
           if (!icon) return;
+          if (!orbits) {
+            icon.style.opacity = "0";
+            return;
+          }
           const scale = body.behind ? 0.85 : 1;
           icon.style.transform = `translate3d(${body.x.toFixed(1)}px, ${body.y.toFixed(1)}px, 0) translate(-50%, -50%) scale(${String(scale)})`;
           icon.style.opacity = body.behind ? "0.6" : "1";
@@ -106,7 +135,7 @@ export default function ConnectedGlobe({ compact, className }: ConnectedGlobePro
 
       observer = new ResizeObserver(() => {
         renderer.resize(wrapper.clientWidth, window.devicePixelRatio || 1);
-        draw(false);
+        draw({ animated: false, orbits: modeRef.current === "full", edges: false });
       });
       observer.observe(wrapper);
       // Reveal the canvas and retire the static frame directly: a DOM sync, not React state.
@@ -124,14 +153,15 @@ export default function ConnectedGlobe({ compact, className }: ConnectedGlobePro
     };
   }, [compact]);
 
-  // Run only while in view, the tab is visible and motion is allowed.
+  // Run while in view and the tab is visible. Only the footer switch ("frozen") stops it.
   useEffect(() => {
+    modeRef.current = mode;
     const wrapper = wrapperRef.current;
     if (!wrapper) return;
     let frameId = 0;
     let readyPoll = 0;
 
-    if (reduced) {
+    if (mode === "frozen") {
       // Static frame: Kigali facing, tilted, arcs drawn, no packets, orbit icons still.
       const paint = (): void => {
         const draw = drawRef.current;
@@ -141,10 +171,11 @@ export default function ConnectedGlobe({ compact, className }: ConnectedGlobePro
         }
         const s = stateRef.current;
         s.elapsed = 0;
+        s.angle = 0;
         s.dragSpin = 0;
         s.tiltOffset = 0;
         s.yawOffset = 0;
-        draw(false);
+        draw({ animated: false, orbits: true, edges: false });
         markState(wrapper, "static");
       };
       paint();
@@ -158,11 +189,12 @@ export default function ConnectedGlobe({ compact, className }: ConnectedGlobePro
       return;
     }
 
+    const full = mode === "full";
     const lowPower =
       compact || (typeof navigator !== "undefined" && (navigator.hardwareConcurrency || 8) <= 4);
     // Adaptive frame rate: start at 60fps (30 on phones and 4 or fewer cores) and drop to 30 for
-    // the rest of the session if the average draw cost over 60 frames exceeds the budget, so a
-    // slow device spends at most half its frames on the globe.
+    // the rest of the session if the average draw cost over 60 frames exceeds the budget. It only
+    // lowers the frame rate; the loop itself never stops while the globe is visible.
     let minInterval = 1000 / (lowPower ? globe.fpsLow : globe.fpsDesktop);
     let last = performance.now();
     let stats = { frames: 0, total: 0, max: 0 };
@@ -180,6 +212,7 @@ export default function ConnectedGlobe({ compact, className }: ConnectedGlobePro
       const dt = Math.min(delta, 50);
       const s = stateRef.current;
       s.elapsed += dt;
+      s.angle += (dt / (full ? globe.turnMs : globe.turnReducedMs)) * Math.PI * 2;
       // Touch inertia decays over about dragDecayMs.
       if (Math.abs(s.velocity) > 1e-5) {
         s.dragSpin += s.velocity * dt;
@@ -188,7 +221,7 @@ export default function ConnectedGlobe({ compact, className }: ConnectedGlobePro
       s.tiltOffset += (s.targetTilt - s.tiltOffset) * globe.pointerSmoothing;
       s.yawOffset += (s.targetYaw - s.yawOffset) * globe.pointerSmoothing;
       const t0 = performance.now();
-      draw(true);
+      draw({ animated: full, orbits: full, edges: full });
       const cost = performance.now() - t0;
       stats.frames += 1;
       stats.total += cost;
@@ -209,7 +242,7 @@ export default function ConnectedGlobe({ compact, className }: ConnectedGlobePro
     return () => {
       cancelAnimationFrame(frameId);
     };
-  }, [reduced, inView, pageVisible, compact]);
+  }, [mode, inView, pageVisible, compact]);
 
   // Pointer tilt toward the cursor (fine pointers) and horizontal touch drag with inertia.
   useEffect(() => {

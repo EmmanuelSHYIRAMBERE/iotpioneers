@@ -69,11 +69,13 @@ test.describe("page", () => {
     }
   });
 
-  test("the demo badge is present once the dashboard loads", async ({ page }) => {
+  test("the dashboard shows one disclaimer caption and no demo badge", async ({ page }) => {
     await page.goto("/#iotdatahub");
-    await expect(page.getByRole("button", { name: /Simulated demo data/ }).first()).toBeVisible({
-      timeout: 20_000,
-    });
+    await expect(
+      page.getByRole("group", { name: "IoTDataHub demo dashboard with simulated data" }),
+    ).toBeVisible({ timeout: 20_000 });
+    // Improvement run 2: the badge is removed; the caption under the frame is the disclaimer.
+    await expect(page.getByRole("button", { name: /Simulated demo data/ })).toHaveCount(0);
     await expect(
       // One caption under the frame (audit issue 22 merged the two disclaimers into it).
       page.getByText("Dashboard shown with simulated data for illustration."),
@@ -147,31 +149,6 @@ test.describe("shop", () => {
         });
     });
   }
-});
-
-test.describe("motion", () => {
-  test("reduced motion shows the marquee as a static list", async ({ browser }) => {
-    const context = await browser.newContext({ reducedMotion: "reduce" });
-    const page = await context.newPage();
-    await page.goto("/");
-    // The preference is read on hydration, which Firefox and WebKit reach later on slow machines
-    // (decision log 25); before it, no animation runs, so nothing moves in the meantime.
-    await expect(page.getByRole("button", { name: "Pause animation" })).toHaveCount(0, {
-      timeout: 20_000,
-    });
-    await expect(page.getByRole("list", { name: "Areas of expertise" })).toHaveCount(1);
-    await context.close();
-  });
-
-  test("marquee pause toggle reflects its state", async ({ page }) => {
-    await page.goto("/");
-    const toggle = page.getByRole("button", { name: "Pause animation" });
-    await toggle.click();
-    await expect(page.getByRole("button", { name: "Play animation" })).toHaveAttribute(
-      "aria-pressed",
-      "true",
-    );
-  });
 });
 
 test.describe("layout", () => {
@@ -325,6 +302,7 @@ test.describe("design audit batch 1 follow-ups", () => {
     await page.waitForTimeout(800);
     const gaps = await page.evaluate(() => {
       const order = [
+        "#top",
         "#about",
         "#solutions",
         "#iotdatahub",
@@ -368,7 +346,7 @@ test.describe("design audit batch 1 follow-ups", () => {
       body: JSON.stringify(gaps, null, 2),
       contentType: "application/json",
     });
-    expect(gaps.length).toBe(7);
+    expect(gaps.length).toBe(8);
     for (const { join, gap } of gaps) expect(gap, join).toBeLessThanOrEqual(210);
     await context.close();
   });
@@ -457,7 +435,7 @@ test.describe("completion run", () => {
     await expect(globeHost).toHaveAttribute("data-globe-state", "paused", { timeout: 10_000 });
   });
 
-  test("reduced motion: the globe is a static frame and the hero is finished", async ({
+  test("system reduced motion: the globe keeps turning slowly and the hero is finished", async ({
     browser,
   }, testInfo) => {
     const context = await browser.newContext({
@@ -466,9 +444,10 @@ test.describe("completion run", () => {
     });
     const page = await context.newPage();
     await page.goto("/");
+    // Improvement run 2: system reduced motion is the gentle mode (120s turn, arcs only).
     await expect(page.locator("[data-globe-state]").first()).toHaveAttribute(
       "data-globe-state",
-      "static",
+      "running",
       {
         timeout: 20_000,
       },
@@ -578,12 +557,6 @@ test.describe("completion run", () => {
     expect(overlaps).toEqual([]);
   });
 
-  test("the marquee has two rows moving in opposite directions", async ({ page }) => {
-    await page.goto("/");
-    await expect(page.locator('[data-marquee-row="left"]')).toHaveCount(1);
-    await expect(page.locator('[data-marquee-row="right"]')).toHaveCount(1);
-  });
-
   test("nothing above the pinned IoTDataHub story has a transform or perspective", async ({
     page,
     isMobile,
@@ -609,5 +582,195 @@ test.describe("completion run", () => {
     });
     // A transform or perspective here would become the containing block for the GSAP pin.
     expect(offenders).toEqual([]);
+  });
+});
+
+test.describe("improvement run 2", () => {
+  for (const width of [390, 1024, 1440]) {
+    test(`header logo and links stay visible on every section at ${String(width)}px`, async ({
+      page,
+    }) => {
+      test.setTimeout(90_000);
+      await page.setViewportSize({ width, height: 900 });
+      await page.goto("/");
+      const header = page.locator("header").first();
+      const logo = header.getByRole("link", { name: /back to top/ });
+      const nav = header.getByRole("navigation", { name: "Main" });
+      for (const id of [
+        "top",
+        "about",
+        "solutions",
+        "iotdatahub",
+        "shop",
+        "paths",
+        "why",
+        "contact",
+      ]) {
+        await page.evaluate((target) => {
+          document.getElementById(target)?.scrollIntoView({ block: "start" });
+        }, id);
+        await page.waitForTimeout(400);
+        await expect(logo, id).toBeVisible();
+        const opacity = await logo.evaluate((el) => {
+          let o = 1;
+          let n: Element | null = el;
+          while (n) {
+            o *= parseFloat(getComputedStyle(n).opacity);
+            n = n.parentElement;
+          }
+          return o;
+        });
+        expect(opacity, `logo opacity at ${id}`).toBe(1);
+        if (width >= 1024) {
+          for (const link of await nav.getByRole("link").all())
+            await expect(link, id).toBeVisible();
+          await expect(header.getByRole("link", { name: "Start a Project" })).toBeVisible();
+        } else {
+          await expect(header.getByRole("button", { name: "Open menu" })).toBeVisible();
+        }
+      }
+    });
+  }
+
+  test("no preview tooling is visible: no banner, no Unverified tags or outlines", async ({
+    page,
+  }) => {
+    await page.goto("/");
+    await expect(page.locator(".verify-marker, .verify-tag, [data-unverified]")).toHaveCount(0);
+    const text = await page.locator("body").innerText();
+    expect(text.includes("Unverified")).toBe(false);
+    await expect(page.getByRole("button", { name: /Preview build/ })).toHaveCount(0);
+  });
+
+  test("the value strip and the marquee are gone; the hero flows into About", async ({ page }) => {
+    await page.goto("/");
+    await expect(page.locator("[data-marquee-row]")).toHaveCount(0);
+    await expect(page.getByRole("list", { name: "Areas of expertise" })).toHaveCount(0);
+    const next = await page.evaluate(() => document.getElementById("top")?.nextElementSibling?.id);
+    expect(next).toBe("about");
+  });
+
+  test("the hero headline has no lighter box behind its words", async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto("/");
+    await page.waitForTimeout(3500);
+    const clipped = await page
+      .locator("#hero-title span")
+      .evaluateAll(
+        (nodes) => nodes.filter((n) => getComputedStyle(n).overflow === "hidden").length,
+      );
+    expect(clipped).toBe(0);
+  });
+
+  test("the globe angle keeps increasing over 10 seconds while visible", async ({
+    page,
+    isMobile,
+  }) => {
+    test.skip(isMobile, "Desktop layout");
+    test.setTimeout(60_000);
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto("/");
+    const host = page.locator("[data-globe-state]").first();
+    await expect(host).toHaveAttribute("data-globe-state", "running", { timeout: 20_000 });
+    const angles: number[] = [];
+    for (let i = 0; i < 6; i += 1) {
+      angles.push(Number(await host.getAttribute("data-globe-angle")));
+      await page.mouse.move(400 + i * 120, 300 + i * 40);
+      await page.waitForTimeout(2000);
+    }
+    for (let i = 1; i < angles.length; i += 1) {
+      expect(angles[i], `sample ${String(i)}`).toBeGreaterThan(angles[i - 1] ?? 0);
+    }
+  });
+
+  test("the footer Reduce motion switch freezes the globe on its static frame", async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto("/");
+    await page.getByRole("switch", { name: /Reduce motion/ }).click();
+    await expect(page.locator("[data-globe-state]").first()).toHaveAttribute(
+      "data-globe-state",
+      "static",
+      { timeout: 20_000 },
+    );
+  });
+
+  for (const viewport of [
+    { width: 1366, height: 768 },
+    { width: 1440, height: 900 },
+  ]) {
+    test(`the dashboard frame fits inside the viewport at ${String(viewport.width)}x${String(viewport.height)}`, async ({
+      page,
+      isMobile,
+    }) => {
+      test.skip(isMobile, "Desktop layout");
+      await page.setViewportSize(viewport);
+      await page.goto("/#iotdatahub");
+      const frame = page.getByRole("group", {
+        name: "IoTDataHub demo dashboard with simulated data",
+      });
+      await expect(frame).toBeVisible({ timeout: 20_000 });
+      await frame.evaluate((el) => {
+        el.scrollIntoView({ block: "center" });
+      });
+      await page.waitForTimeout(1500);
+      const box = await frame.boundingBox();
+      expect(box).not.toBeNull();
+      if (!box) return;
+      expect(box.y).toBeGreaterThanOrEqual(0);
+      expect(box.y + box.height).toBeLessThanOrEqual(viewport.height);
+      expect(box.width).toBeLessThanOrEqual(722);
+      await expect(
+        page.getByRole("button", { name: /Pause live data|Resume live data/ }).first(),
+      ).toBeVisible();
+      await expect(page.getByRole("button", { name: "Play live demo" })).toHaveCount(0);
+    });
+  }
+
+  test("no two product cards share an image", async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto("/#shop");
+    const cards = page.locator("#shop li img");
+    await expect(cards.first()).toBeAttached({ timeout: 20_000 });
+    const sources = await cards.evaluateAll((imgs) =>
+      imgs.map((img) => {
+        const src = img.getAttribute("src") ?? "";
+        const url = new URL(src, location.href);
+        return url.searchParams.get("url") ?? url.pathname;
+      }),
+    );
+    expect(sources.length).toBeGreaterThan(5);
+    expect(new Set(sources).size).toBe(sources.length);
+  });
+
+  test("Solutions scroll story: the item in the middle of the viewport becomes active", async ({
+    page,
+    isMobile,
+  }) => {
+    test.skip(isMobile, "Desktop layout");
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto("/");
+    for (const id of ["iot", "software", "cloud"]) {
+      await page.evaluate((target) => {
+        document
+          .querySelector(`[data-solution-id="${target}"]`)
+          ?.scrollIntoView({ block: "center" });
+      }, id);
+      await expect(page.locator(`[data-solution-id="${id}"]`)).toHaveAttribute(
+        "data-active",
+        "true",
+      );
+      await expect(page.locator(`[data-capability-panel="${id}"]`)).toBeAttached();
+    }
+    // Keyboard: Enter on an item scrolls it to the middle and activates it.
+    const last = page.getByRole("button", { name: /Technology Integration/ });
+    await last.focus();
+    await page.keyboard.press("Enter");
+    await expect(page.locator('[data-solution-id="integration"]')).toHaveAttribute(
+      "data-active",
+      "true",
+      { timeout: 5000 },
+    );
   });
 });

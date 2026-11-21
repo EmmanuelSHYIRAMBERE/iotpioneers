@@ -190,21 +190,6 @@ export interface StockImage extends Verifiable {
   illustrative: boolean;
 }
 
-export type ValueStripIcon = "engineering" | "datahub" | "shop";
-
-/** One item of the three-item value strip under the hero. */
-export interface ValueStripItem extends Verifiable {
-  id: "engineering" | "iotdatahub" | "shop";
-  title: string;
-  text: string;
-  icon: ValueStripIcon;
-  href: `#${SectionId}`;
-  /** Visible link text. */
-  linkLabel: string;
-  /** Accessible name naming the destination, for example "See IoTDataHub". */
-  linkAccessibleName: string;
-}
-
 export interface PathNeed {
   id: string;
   label: string;

@@ -64,6 +64,9 @@
   --text-row-title--line-height: 1.2;
   --text-row-title--letter-spacing: -0.01em;
   --text-row-title--font-weight: 600;
+  /* Live reading value in status cards (dashboard). */
+  --text-reading: clamp(1.25rem, 0.9rem + 1vw, 2rem);
+  --text-reading--line-height: 1;
   --text-h4: 1.25rem;
   --text-h4--line-height: 1.3;
   --text-h4--font-weight: 600;
@@ -82,8 +85,6 @@
   --text-eyebrow--letter-spacing: 0.14em;
   --text-data: clamp(1.75rem, 1.4rem + 1vw, 2.5rem);
   --text-data--line-height: 1.1;
-  --text-marquee: clamp(1.5rem, 1rem + 2vw, 3rem);
-  --text-marquee--line-height: 1;
   --text-menu: 2rem;
   --text-menu--line-height: 1.2;
 
@@ -107,6 +108,8 @@
   /* Fixed navbar height before scrolling (the scrolled bar is 64px). */
   --spacing-nav: 80px;
 
+  /* IoTDataHub dashboard frame beside the steps (improvement run 2, task 5). */
+  --container-dashboard: 720px;
   --container-page: 1280px;
   --container-wide: 1440px;
   --container-cta: 880px;
@@ -205,14 +208,6 @@
   }
   50% {
     transform: scale(1.15);
-  }
-}
-@keyframes marquee {
-  from {
-    transform: translate3d(0, 0, 0);
-  }
-  to {
-    transform: translate3d(-50%, 0, 0);
   }
 }
 
@@ -462,6 +457,20 @@
     --anchor-line: var(--color-deep-gold);
   }
 
+  /*
+   * Compact dashboard density (improvement run 2, task 5). Inside the IoTDataHub mockup the type
+   * tokens are rescaled so the whole frame fits one viewport beside the steps. Text inside the
+   * mockup may go down to 12px: a logged exception to the 14px minimum (decision log 27).
+   */
+  .dashboard-compact {
+    --text-small: 0.75rem;
+    --text-small--line-height: 1.4;
+    --text-body: 0.8125rem;
+    --text-h3: 1.25rem;
+    --text-h4: 1rem;
+    --text-reading: 1.25rem;
+  }
+
   /* Headline glow (hero h1 and CTA headline only; never body text or the gradient word). */
   .text-glow-gold {
     text-shadow: 0 0 40px color-mix(in srgb, var(--color-bright-gold) 25%, transparent);
@@ -599,7 +608,7 @@
     font-variant-numeric: tabular-nums;
   }
 
-  /* Unverified content marker: development and preview builds only. */
+  /* Unverified content marker: only when NEXT_PUBLIC_SHOW_VERIFY_MARKERS is "true" (opt-in). */
   .verify-marker {
     position: relative;
     outline: 1.5px dotted var(--color-preview);

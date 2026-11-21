@@ -6,7 +6,7 @@ import { REDUCE_MOTION_STORAGE_KEY } from "@/lib/motion";
 /**
  * Reduced motion = the system preference OR the footer "Reduce motion" toggle.
  * The manual choice lives in localStorage and on <html data-reduce-motion>, so CSS driven
- * motion (marquee, pulses, shimmer) responds too. An inline script in app/layout.tsx sets
+ * motion (pulses, shimmer) responds too. An inline script in app/layout.tsx sets
  * the attribute before first paint to avoid a flash of motion.
  */
 

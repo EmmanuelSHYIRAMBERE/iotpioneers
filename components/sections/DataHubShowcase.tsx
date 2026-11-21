@@ -78,15 +78,13 @@ export function DataHubShowcase() {
             steps={dataHub.steps}
             labels={{
               sidebar: dataHub.sidebarTerms.items,
-              badgeLabel: dataHub.demoBadge.label,
-              badgeTooltip: dataHub.demoBadge.tooltip,
               address: new URL(dataHub.cta.href).hostname.replace(/^www\./, ""),
+              caption: dataHub.demoCaption,
             }}
             productHref={dataHub.cta.href}
             productLabel={dataHub.cta.label}
           />
         </TiltRise>
-        <p className="mt-6 text-small text-slate-400">{dataHub.demoCaption}</p>
       </div>
 
       <div className="container-page mt-16 md:mt-20">
@@ -101,8 +99,8 @@ export function DataHubShowcase() {
             verified: feature.verified,
           }))}
         />
-        {/* The simulated-data disclaimer appears once: the badge on the frame plus the caption under
-            it (audit issue 22). */}
+        {/* The simulated-data disclaimer appears once: the caption under the dashboard frame;
+            audit issue 22). */}
         <div className="mt-16">
           <AnimatedButton href={dataHub.cta.href} external size="lg">
             {dataHub.cta.label}

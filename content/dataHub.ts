@@ -36,13 +36,8 @@ export const dataHub = {
     source:
       "Neutral terms from specification; 'devices', 'channels', 'dashboards' and 'alerts' appear on iotdatahub.rw",
   } satisfies Verifiable & { items: readonly string[] },
-  demoCaption:
-    "Stylised representation of IoTDataHub. Dashboard shown with simulated data for illustration.",
-  demoBadge: {
-    label: "Simulated demo data",
-    tooltip:
-      "This is an illustration with generated data. It is not connected to a live IoTDataHub account.",
-  },
+  /** The single disclaimer, one line under the dashboard (improvement run 2, task 5). */
+  demoCaption: "Dashboard shown with simulated data for illustration.",
   steps: [
     {
       id: "connect",

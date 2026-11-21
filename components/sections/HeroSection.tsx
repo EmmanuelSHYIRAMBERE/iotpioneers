@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, type CSSProperties, type RefObject } from "react";
+import { useEffect, useRef, useState, type CSSProperties, type RefObject } from "react";
 import dynamic from "next/dynamic";
 import { motion, useScroll, useTransform, type Variants } from "motion/react";
 import { ArrowRight } from "lucide-react";
@@ -53,9 +53,15 @@ function HeadlineLine({
   words,
   startMs,
   gradientFrom,
+  revealed,
 }: {
   words: readonly string[];
   startMs: number;
+  /**
+   * Once the words have risen, the masks stop clipping: an `overflow: hidden` mask would cut the
+   * headline glow into a lighter rectangle behind each word.
+   */
+  revealed: boolean;
   /** Index from which words get the gradient. */
   gradientFrom?: number;
 }) {
@@ -64,7 +70,10 @@ function HeadlineLine({
       {words.map((word, index) => (
         <span
           key={`${word}-${String(index)}`}
-          className="inline-block overflow-hidden pb-[0.06em] align-bottom"
+          className={cn(
+            "inline-block pb-[0.06em] align-bottom",
+            revealed ? "overflow-visible" : "overflow-hidden",
+          )}
         >
           <motion.span
             data-reveal=""
@@ -190,6 +199,18 @@ export function HeroSection({ content }: HeroSectionProps) {
   const lineTwo = content.lineTwo.split(" ");
   // Line two starts 120ms after line one's first word finishes.
   const lineTwoStart = timing.heroHeadlineAt + duration.reveal + timing.heroHeadlineLineGap;
+  // When the last word has risen, release the masks so the glow is never clipped into boxes.
+  const revealEndMs = lineTwoStart + (lineTwo.length - 1) * stagger.words + duration.reveal;
+  const [masksDone, setMasksDone] = useState(false);
+  useEffect(() => {
+    const id = window.setTimeout(() => {
+      setMasksDone(true);
+    }, revealEndMs);
+    return () => {
+      window.clearTimeout(id);
+    };
+  }, [revealEndMs]);
+  const revealed = reduced || masksDone;
 
   return (
     <section
@@ -256,8 +277,13 @@ export function HeroSection({ content }: HeroSectionProps) {
                 id="hero-title"
                 className="text-glow-gold mt-4 font-display text-display-xl text-cloud-50 lg:mt-5 lg:text-display-l"
               >
-                <HeadlineLine words={lineOne} startMs={timing.heroHeadlineAt} gradientFrom={1} />
-                <HeadlineLine words={lineTwo} startMs={lineTwoStart} />
+                <HeadlineLine
+                  words={lineOne}
+                  startMs={timing.heroHeadlineAt}
+                  gradientFrom={1}
+                  revealed={revealed}
+                />
+                <HeadlineLine words={lineTwo} startMs={lineTwoStart} revealed={revealed} />
               </h1>
               <motion.p
                 data-reveal=""
