@@ -8,7 +8,6 @@ import { SkipLink } from "@/components/layout/SkipLink";
 import { AnchorHighlight } from "@/components/ui/AnchorHighlight";
 import { MotionProvider } from "@/components/ui/MotionProvider";
 import { buildOrganizationJsonLd } from "@/lib/structuredData";
-import { colors } from "@/lib/tokens";
 import { isPlaceholder, isPreviewMode, resolveSiteUrl } from "@/lib/verification";
 import { REDUCE_MOTION_STORAGE_KEY } from "@/lib/motion";
 import "./globals.css";
@@ -68,8 +67,8 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: colors.navy950,
-  colorScheme: "dark light",
+  themeColor: "#ffffff",
+  colorScheme: "light",
 };
 
 // Applies the footer "Reduce motion" choice before first paint, so nothing flashes into motion.

@@ -62,7 +62,7 @@ export function DrawnCheck({ rowIndex }: { rowIndex: number }) {
       strokeWidth={2}
       strokeLinecap="round"
       strokeLinejoin="round"
-      className="mx-auto text-deep-gold"
+      className="mx-auto text-bright-gold"
     >
       <motion.path
         d="M20 6 9 17l-5-5"

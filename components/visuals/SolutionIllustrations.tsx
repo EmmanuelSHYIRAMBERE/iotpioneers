@@ -41,12 +41,12 @@ interface Drawing {
 
 const accentClass: Record<Accent, string> = {
   ink: "stroke-navy-950",
-  gold: "stroke-deep-gold",
+  gold: "stroke-bright-gold",
   cyan: "stroke-cyan-700",
 };
 const fillClass: Record<Accent, string> = {
   ink: "fill-navy-950",
-  gold: "fill-deep-gold",
+  gold: "fill-bright-gold",
   cyan: "fill-cyan-700",
 };
 /** Dark panel tone (improvement run 2): brightGold and cyan lines over the navy photo overlay. */
@@ -279,7 +279,7 @@ export function SolutionIllustration({
                 <circle
                   key={`${kind}-p${String(index)}`}
                   r="3.5"
-                  className={dark ? "fill-bright-gold" : "fill-deep-gold"}
+                  className={dark ? "fill-bright-gold" : "fill-bright-gold"}
                   opacity="0"
                 >
                   <animateMotion path={line.d} begin={begin} dur={dur} repeatCount="indefinite" />

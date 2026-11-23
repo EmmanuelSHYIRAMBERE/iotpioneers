@@ -124,7 +124,7 @@ function DiscussLink({ solution }: { solution: Solution }) {
   return (
     <a
       href="#contact"
-      className="group/link mt-6 inline-flex min-h-11 items-center gap-2 font-medium text-deep-gold"
+      className="group/link mt-6 inline-flex min-h-11 items-center gap-2 font-medium text-bright-gold"
     >
       {solution.ctaLabel}
       <ArrowRight
@@ -143,7 +143,7 @@ function Deliverables({ items }: { items: readonly string[] }) {
       {items.map((item) => (
         <li
           key={item}
-          className="rounded-tag bg-slate-100 px-2.5 py-1 font-mono text-small text-navy-950"
+          className="rounded-tag border border-slate-300 bg-slate-100 px-2.5 py-1 font-mono text-small text-navy-950"
         >
           {item}
         </li>
@@ -283,7 +283,7 @@ export function SolutionsIndexClient({ solutions }: SolutionsIndexClientProps) {
                   {/* Gold left bar on the active item. */}
                   <motion.span
                     aria-hidden="true"
-                    className="absolute top-0 bottom-0 left-0 w-0.5 origin-top bg-deep-gold"
+                    className="absolute top-0 bottom-0 left-0 w-0.5 origin-top bg-bright-gold"
                     initial={false}
                     animate={{ scaleY: open ? 1 : 0 }}
                     transition={{
@@ -315,7 +315,7 @@ export function SolutionsIndexClient({ solutions }: SolutionsIndexClientProps) {
                         <span
                           className={cn(
                             "flex-1 font-display text-row-title transition-colors duration-200",
-                            open ? "text-deep-gold" : "text-navy-950 group-hover:text-deep-gold",
+                            open ? "text-bright-gold" : "text-navy-950 group-hover:text-bright-gold",
                           )}
                         >
                           {solution.title}

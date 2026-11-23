@@ -82,7 +82,7 @@ export function ProductsDropdown({ label, products, active }: ProductsDropdownPr
         }}
         className={cn(
           "inline-flex min-h-11 items-center gap-1 text-[0.9375rem] font-medium transition-colors duration-200",
-          active || open ? "text-cloud-50" : "text-cloud-50/80 hover:text-cloud-50",
+          active || open ? "text-navy-950" : "text-navy-950/70 hover:text-navy-950",
         )}
       >
         {label}
@@ -108,7 +108,7 @@ export function ProductsDropdown({ label, products, active }: ProductsDropdownPr
               transition: { duration: s(timing.illustrationOut), ease: ease.in },
             }}
             transition={{ duration: s(timing.solutionPanel), ease: ease.outExpo }}
-            className="absolute top-full left-1/2 mt-3 w-[320px] rounded-card border border-line-dark bg-navy-950 p-2 shadow-highlight"
+            className="absolute top-full left-1/2 mt-3 w-[320px] rounded-card border border-slate-200 bg-white p-2 shadow-hover"
           >
             <ul className="flex flex-col gap-1">
               {products.map((product) => {
@@ -116,7 +116,7 @@ export function ProductsDropdown({ label, products, active }: ProductsDropdownPr
                 return (
                   <li
                     key={product.id}
-                    className="flex items-stretch gap-1 rounded-button transition-colors duration-200 hover:bg-navy-900"
+                    className="flex items-stretch gap-1 rounded-button transition-colors duration-200 hover:bg-slate-50"
                   >
                     <a
                       href={product.sectionHref}
@@ -129,13 +129,13 @@ export function ProductsDropdown({ label, products, active }: ProductsDropdownPr
                         aria-hidden="true"
                         size={24}
                         strokeWidth={ICON_STROKE}
-                        className="shrink-0 text-pioneer-gold"
+                        className="shrink-0 text-bright-gold"
                       />
                       <span className="min-w-0">
-                        <span className="block font-display text-[0.9375rem] font-semibold text-cloud-50">
+                        <span className="block font-display text-[0.9375rem] font-semibold text-navy-950">
                           {product.name}
                         </span>
-                        <span className="block text-small text-slate-400">
+                        <span className="block text-small text-slate-600">
                           {product.description}
                         </span>
                       </span>
@@ -145,7 +145,7 @@ export function ProductsDropdown({ label, products, active }: ProductsDropdownPr
                       target="_blank"
                       rel="noopener noreferrer"
                       aria-label={`Open the ${product.name} website (opens in a new tab)`}
-                      className="flex w-11 shrink-0 items-center justify-center rounded-button text-slate-400 transition-colors duration-200 hover:bg-navy-800 hover:text-cloud-50"
+                      className="flex w-11 shrink-0 items-center justify-center rounded-button text-slate-600 transition-colors duration-200 hover:bg-slate-100 hover:text-navy-950"
                     >
                       <ArrowUpRight aria-hidden="true" size={18} strokeWidth={ICON_STROKE} />
                     </a>

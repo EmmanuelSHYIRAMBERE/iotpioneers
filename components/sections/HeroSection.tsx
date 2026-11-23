@@ -7,7 +7,6 @@ import { ArrowRight, Pause, Play } from "lucide-react";
 import { AnimatedButton } from "@/components/ui/AnimatedButton";
 import { VerifyMarker } from "@/components/ui/VerifyMarker";
 import { AnimatedBackground } from "@/components/visuals/AnimatedBackground";
-import { ParticleNetwork } from "@/components/visuals/ParticleNetwork";
 import { StaticGlobe } from "@/components/visuals/StaticNetwork";
 import { mediaQueries, useMediaQuery } from "@/hooks/useMediaQuery";
 import { useReducedMotionPreference } from "@/hooks/useReducedMotionPreference";
@@ -219,9 +218,9 @@ export function HeroSection({ content }: HeroSectionProps) {
       ref={sectionRef}
       id="top"
       aria-labelledby="hero-title"
-      className="surface-dark hero-offset relative isolate flex items-center overflow-hidden bg-navy-950 pb-16 max-md:pt-[var(--spacing-nav)] md:pb-28"
+      className="surface-light hero-offset relative isolate flex items-center overflow-hidden bg-white pb-16 max-md:pt-[var(--spacing-nav)] md:pb-28"
     >
-      {/* Background layers: a faint node network (the globe is the only strong focal point). */}
+      {/* Background: subtle gold glow only, no dark veil. */}
       <motion.div
         aria-hidden="true"
         className="absolute inset-0 -z-10"
@@ -230,20 +229,11 @@ export function HeroSection({ content }: HeroSectionProps) {
         <motion.div
           className="absolute inset-0"
           initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
+          animate={{ opacity: 0.4 }}
           transition={{ duration: s(timing.heroGlowFade), ease: ease.outExpo }}
         >
           <AnimatedBackground variant="heroGlow" />
         </motion.div>
-        <motion.div
-          className="absolute inset-0"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: s(duration.cinematic), ease: ease.outExpo }}
-        >
-          <ParticleNetwork mode="ambient" faint calmRef={textRef} seed={11} />
-        </motion.div>
-        <div className="bg-hero-veil absolute inset-0" />
         <div
           ref={spotRef}
           className="pointer-events-none absolute inset-0 opacity-0 transition-opacity"
@@ -270,7 +260,7 @@ export function HeroSection({ content }: HeroSectionProps) {
               }}
               aria-pressed={globePaused}
               aria-label={globePaused ? "Resume globe animation" : "Pause globe animation"}
-              className="flex size-8 items-center justify-center rounded-full border border-line-dark-strong text-slate-400 transition-colors duration-200 hover:border-bright-gold hover:text-cloud-50"
+              className="flex size-8 items-center justify-center rounded-full border border-slate-300 text-slate-500 transition-colors duration-200 hover:border-bright-gold hover:text-navy-950"
             >
               {globePaused ? (
                 <Play aria-hidden="true" size={14} strokeWidth={ICON_STROKE} />
@@ -296,7 +286,7 @@ export function HeroSection({ content }: HeroSectionProps) {
               </motion.p>
               <h1
                 id="hero-title"
-                className="text-glow-gold mt-4 font-display text-display-xl text-cloud-50 lg:mt-5 lg:text-display-l"
+                className="mt-4 font-display text-display-xl text-navy-950 lg:mt-5 lg:text-display-l"
               >
                 <HeadlineLine
                   words={lineOne}
@@ -308,7 +298,7 @@ export function HeroSection({ content }: HeroSectionProps) {
               </h1>
               <motion.p
                 data-reveal=""
-                className="mt-5 max-w-lead text-lead text-slate-400 lg:mt-6"
+                className="mt-5 max-w-lead text-lead text-slate-600 lg:mt-6"
                 variants={riseIn(timing.heroLeadAt, timing.heroLeadDuration, distance.default)}
               >
                 {content.lead}
@@ -362,7 +352,7 @@ export function HeroSection({ content }: HeroSectionProps) {
                 <li key={chip.id} className="shrink-0">
                   <a
                     href={chip.href}
-                    className="inline-flex min-h-11 items-center gap-2.5 rounded-full border border-line-dark bg-navy-950/40 px-4 font-mono text-small text-cloud-50 transition-colors duration-200 hover:border-line-dark-strong hover:bg-navy-900"
+                    className="inline-flex min-h-11 items-center gap-2.5 rounded-full border border-slate-200 bg-white px-4 font-mono text-small text-navy-950 shadow-rest transition-colors duration-200 hover:border-bright-gold/50 hover:bg-slate-50"
                   >
                     <span aria-hidden="true" className="relative flex size-1.5">
                       <span
@@ -394,9 +384,9 @@ export function HeroSection({ content }: HeroSectionProps) {
           animate={{ opacity: 1 }}
           transition={{ delay: s(timing.heroScrollAt), duration: s(timing.heroScrollFade) }}
         >
-          <span className="label-mono text-pioneer-gold">{content.scrollLabel}</span>
-          <span className="relative block h-12 w-px bg-line-dark-strong">
-            <span className="motion-loop absolute top-0 -left-[2.5px] size-1.5 animate-scroll-cue rounded-full bg-cyan-400" />
+          <span className="label-mono text-bright-gold">{content.scrollLabel}</span>
+          <span className="relative block h-12 w-px bg-slate-300">
+            <span className="motion-loop absolute top-0 -left-[2.5px] size-1.5 animate-scroll-cue rounded-full bg-bright-gold" />
           </span>
         </motion.div>
       </motion.div>

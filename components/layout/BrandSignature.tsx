@@ -13,7 +13,7 @@ export function BrandSignature({ text }: BrandSignatureProps) {
     <motion.p
       aria-hidden="true"
       data-reveal=""
-      className="pointer-events-none overflow-hidden text-center font-display text-[11.5vw] leading-none font-bold tracking-[-0.04em] whitespace-nowrap text-cloud-50 select-none 2xl:text-[176px]"
+      className="pointer-events-none overflow-hidden text-center font-display text-[11.5vw] leading-none font-bold tracking-[-0.04em] whitespace-nowrap text-navy-950 select-none 2xl:text-[176px]"
       initial={{ opacity: 0, y: distance.large }}
       whileInView={{ opacity: 0.04, y: 0 }}
       viewport={{ once: true, amount: 0.3 }}

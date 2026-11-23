@@ -49,7 +49,7 @@ export function SectionHeading({
         <WordReveal
           text={title}
           {...(emphasis ? { emphasis } : {})}
-          emphasisClassName={dark ? "text-bright-gold" : "text-deep-gold"}
+          emphasisClassName={dark ? "text-bright-gold" : "text-bright-gold"}
         />
       </Heading>
       {lead ? (

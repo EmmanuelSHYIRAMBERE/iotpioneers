@@ -14,13 +14,13 @@ export function ReduceMotionToggle() {
       onClick={() => {
         setManualReducedMotion(!on);
       }}
-      className="group inline-flex min-h-11 items-center gap-3 text-small text-slate-400 transition-colors duration-200 hover:text-cloud-50"
+      className="group inline-flex min-h-11 items-center gap-3 text-small text-slate-600 transition-colors duration-200 hover:text-navy-950"
     >
       <span
         aria-hidden="true"
         className={cn(
           "relative h-5 w-9 rounded-full border transition-colors duration-200",
-          on ? "border-bright-gold bg-bright-gold/20" : "border-line-dark-strong bg-navy-900",
+          on ? "border-bright-gold bg-bright-gold/20" : "border-slate-300 bg-slate-100",
         )}
       >
         <span

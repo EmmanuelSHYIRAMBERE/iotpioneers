@@ -12,9 +12,9 @@
   --color-navy-900: #142642;
   --color-navy-800: #1b3156;
   /* Brand gold, from the logo (design audit issue 1). Contrast record: docs/05_design_system.md. */
-  --color-pioneer-gold: #ab910f;
-  --color-bright-gold: #d4af37;
-  --color-deep-gold: #7a6406;
+  --color-pioneer-gold: #cc8800;
+  --color-bright-gold: #ffab31;
+  --color-deep-gold: #b87700;
   /* Second chart series only. Electric Blue #2563EB is retired. */
   --color-blue-400: #60a5fa;
   --color-cyan-700: #0e7490;
@@ -27,7 +27,7 @@
   --color-slate-300: #cbd5e1;
   --color-slate-400: #94a3b8;
   --color-slate-600: #475569;
-  --color-amber-400: #f5a524;
+  --color-amber-400: #ffab31;
   --color-green-400: #34d399;
   --color-red-400: #f87171;
   /* Preview tooling only (unverified markers, preview notice). Magenta so it never reads as
@@ -96,8 +96,8 @@
   --radius-full: 9999px;
 
   --shadow-*: initial;
-  --shadow-rest: 0 1px 2px rgb(10 16 32 / 0.06), 0 8px 24px rgb(10 16 32 / 0.06);
-  --shadow-hover: 0 16px 40px rgb(10 16 32 / 0.1);
+  --shadow-rest: 0 1px 3px rgb(10 16 32 / 0.08), 0 8px 24px rgb(10 16 32 / 0.08);
+  --shadow-hover: 0 16px 40px rgb(10 16 32 / 0.14);
   --shadow-highlight: inset 0 1px 0 rgb(248 250 252 / 0.06);
 
   --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
@@ -213,7 +213,7 @@
 
 @layer base {
   html {
-    color-scheme: dark light;
+    color-scheme: light;
     scroll-behavior: smooth;
     -webkit-text-size-adjust: 100%;
     text-size-adjust: 100%;
@@ -228,13 +228,15 @@
   }
 
   body {
-    background-color: var(--color-navy-950);
-    color: var(--color-cloud-50);
+    background-color: var(--color-white);
+    color: var(--color-navy-950);
     font-family: var(--font-sans);
     font-size: var(--text-body);
     line-height: var(--text-body--line-height);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    font-synthesis: none;
+    text-rendering: optimizeLegibility;
     overflow-x: clip;
   }
   @media (min-width: 1024px) {
@@ -255,9 +257,13 @@
     --focus-ring: var(--color-bright-gold);
   }
   .surface-light {
-    --focus-ring: var(--color-deep-gold);
+    --focus-ring: var(--color-bright-gold);
   }
   .surface-dark {
+    --focus-ring: var(--color-bright-gold);
+  }
+  /* Dark sections that stay dark (hero, mobile menu) keep cloud-50 text. */
+  .surface-dark-forced {
     --focus-ring: var(--color-bright-gold);
   }
   :focus-visible {
@@ -407,7 +413,7 @@
     padding-inline: 12px;
     border-radius: 9999px;
     border: 1px solid color-mix(in srgb, var(--color-bright-gold) 35%, transparent);
-    background: var(--color-navy-900);
+    background: var(--color-white);
     font-family: var(--font-mono);
     font-weight: 500;
     font-size: var(--text-eyebrow);
@@ -425,9 +431,9 @@
     flex: none;
   }
   .surface-light .eyebrow {
-    border-color: color-mix(in srgb, var(--color-deep-gold) 30%, transparent);
+    border-color: color-mix(in srgb, var(--color-bright-gold) 35%, transparent);
     background: var(--color-white);
-    color: var(--color-deep-gold);
+    color: var(--color-bright-gold);
   }
   /* Plain mono label (no pill), for small labels such as the scroll cue. */
   .label-mono {
@@ -454,7 +460,7 @@
     animation: anchor-underline 1200ms var(--ease-out-expo) both;
   }
   .surface-light [data-anchor-highlight] {
-    --anchor-line: var(--color-deep-gold);
+    --anchor-line: var(--color-bright-gold);
   }
 
   /*
@@ -490,7 +496,7 @@
     inset-inline: 0;
     top: 0;
     height: 2px;
-    background-image: linear-gradient(90deg, var(--color-bright-gold), var(--color-pioneer-gold));
+    background-image: linear-gradient(90deg, var(--color-bright-gold), var(--color-bright-gold));
     transform: scaleX(0);
     transform-origin: left;
     transition: transform 300ms var(--ease-out-expo);
@@ -516,7 +522,7 @@
 
   /* The single allowed gradient text: "Intelligence" in the hero, brightGold to pioneerGold. */
   .text-gradient-gold {
-    background-image: linear-gradient(90deg, var(--color-bright-gold), var(--color-pioneer-gold));
+    background-image: linear-gradient(90deg, var(--color-bright-gold), var(--color-bright-gold));
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
@@ -531,24 +537,24 @@
   .bg-glow-hero {
     background-image: radial-gradient(
       closest-side,
-      color-mix(in srgb, var(--color-pioneer-gold) 22%, transparent),
+      color-mix(in srgb, var(--color-bright-gold) 22%, transparent),
       transparent
     );
   }
   .bg-glow-datahub {
     background-image: radial-gradient(
       closest-side,
-      color-mix(in srgb, var(--color-cyan-500) 18%, transparent),
+      color-mix(in srgb, var(--color-bright-gold) 18%, transparent),
       transparent
     );
   }
   .bg-cta-gradient {
-    /* Gold stop: pioneerGold mixed 12% into navy900. */
+    /* Gold stop: brightGold mixed 8% into white. */
     background-image: linear-gradient(
       135deg,
-      var(--color-navy-950) 0%,
-      var(--color-navy-900) 60%,
-      color-mix(in srgb, var(--color-pioneer-gold) 12%, var(--color-navy-900)) 100%
+      var(--color-white) 0%,
+      var(--color-cloud-50) 60%,
+      color-mix(in srgb, var(--color-bright-gold) 8%, var(--color-cloud-50)) 100%
     );
   }
   /*
@@ -570,7 +576,7 @@
   }
   /* Fade the CTA into the footer colour over its last 120px (part of gradient 3). */
   .bg-cta-fade {
-    background-image: linear-gradient(to bottom, transparent, var(--color-navy-1000));
+    background-image: linear-gradient(to bottom, transparent, var(--color-slate-100));
   }
 
   /* Engineering canvas: 48px dot grid drawn as an SVG pattern (not a gradient). */

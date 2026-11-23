@@ -22,17 +22,17 @@ export const site = {
     source: "Not supplied",
   } satisfies VerifiableText,
   shortDescription: {
-    text: "An engineering company in Kigali building connected systems end to end: devices, data platforms and software.",
+    text: "An engineering company building connected systems end to end: devices, data platforms and software.",
     verified: false,
     source: PROVISIONAL,
   } satisfies VerifiableText,
   metaTitle: {
-    text: "IoT Pioneers | IoT Engineering and Software Solutions in Kigali",
+    text: "IoT Pioneers | IoT Engineering and Software Solutions",
     verified: false,
     source: "seo-and-metadata skill default; pending client approval",
   } satisfies VerifiableText,
   metaDescription: {
-    text: "IoT Pioneers designs and builds connected systems in Kigali, Rwanda: sensors and devices, data platforms like IoTDataHub, and the components builders need.",
+    text: "IoT Pioneers designs and builds connected systems: sensors and devices, data platforms like IoTDataHub, and the components builders need.",
     verified: false,
     source: PROVISIONAL,
   } satisfies VerifiableText,

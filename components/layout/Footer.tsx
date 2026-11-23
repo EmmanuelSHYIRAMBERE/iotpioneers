@@ -32,7 +32,7 @@ const SOCIAL_ICONS: Record<SocialPlatform, LucideIcon> = {
 };
 
 const linkClass =
-  "group relative inline-flex min-h-11 items-center gap-1.5 text-slate-400 transition-colors duration-200 hover:text-cloud-50";
+  "group relative inline-flex min-h-11 items-center gap-1.5 text-black transition-colors duration-200 hover:text-navy-950";
 const underline =
   "absolute bottom-2.5 left-0 h-px w-full origin-left scale-x-0 bg-current transition-transform duration-200 group-hover:scale-x-100";
 
@@ -69,7 +69,7 @@ function InlineIconText({ text }: { text: string }) {
 export function Footer() {
   const year = new Date().getFullYear();
   return (
-    <footer className="surface-dark relative isolate overflow-hidden bg-navy-1000 pt-16 text-cloud-50 md:pt-20">
+    <footer className="surface-light relative isolate overflow-hidden border-t border-slate-200 bg-white pt-16 text-navy-950 shadow-[0_-1px_0_0_#e2e8f0] md:pt-20">
       {site.flags.imigongoTexture ? (
         <AnimatedBackground variant="imigongoTexture" className="-z-10" />
       ) : null}
@@ -79,9 +79,7 @@ export function Footer() {
             <div>
               <Logo alt={site.name.text} size="footer" />
               <VerifyMarker verified={site.shortDescription.verified} className="mt-5">
-                <p className="max-w-[40ch] text-body text-slate-400">
-                  {site.shortDescription.text}
-                </p>
+                <p className="text-black max-w-[40ch] text-body">{site.shortDescription.text}</p>
               </VerifyMarker>
               {socialLinks.length > 0 ? (
                 <ul aria-label="Social media" className="mt-6 flex gap-1">
@@ -95,7 +93,7 @@ export function Footer() {
                             target="_blank"
                             rel="noopener noreferrer"
                             aria-label={`${social.label} (opens in a new tab)`}
-                            className="flex size-11 items-center justify-center rounded-button text-slate-400 transition-colors duration-200 hover:bg-navy-900 hover:text-cloud-50"
+                            className="text-black flex size-11 items-center justify-center rounded-button transition-colors duration-200 hover:bg-slate-100 hover:text-navy-950"
                           >
                             <Icon aria-hidden="true" size={20} strokeWidth={ICON_STROKE} />
                           </a>
@@ -116,7 +114,7 @@ export function Footer() {
             <nav aria-labelledby="footer-company">
               <h2
                 id="footer-company"
-                className="font-mono text-small tracking-[0.14em] text-cloud-50 uppercase"
+                className="font-mono text-small tracking-[0.14em] text-[#cc8800] uppercase"
               >
                 Company
               </h2>
@@ -141,7 +139,7 @@ export function Footer() {
             <nav aria-labelledby="footer-products">
               <h2
                 id="footer-products"
-                className="font-mono text-small tracking-[0.14em] text-cloud-50 uppercase"
+                className="font-mono text-small tracking-[0.14em] text-[#cc8800] uppercase"
               >
                 Products
               </h2>
@@ -174,7 +172,7 @@ export function Footer() {
             className="lg:col-span-3 lg:col-start-10"
           >
             <div>
-              <h2 className="font-mono text-small tracking-[0.14em] text-cloud-50 uppercase">
+              <h2 className="font-mono text-small tracking-[0.14em] text-[#cc8800] uppercase">
                 Contact
               </h2>
               <VerifyMarker verified={contact.verified} className="mt-4">
@@ -187,8 +185,8 @@ export function Footer() {
                     {contact.phoneDisplay}
                     <span aria-hidden="true" className={underline} />
                   </a>
-                  <p className="mt-2 text-body text-slate-400">{contact.address}</p>
-                  <p className="mt-1 text-small text-slate-400">{contact.hours}</p>
+                  <p className="text-black mt-2 text-body">{contact.address}</p>
+                  <p className="text-black mt-1 text-small">{contact.hours}</p>
                 </address>
               </VerifyMarker>
             </div>
@@ -199,9 +197,9 @@ export function Footer() {
           <BrandSignature text={site.legalName.text.replace(/\s+Ltd$/, "")} />
         </div>
 
-        <div className="mt-6 flex flex-col gap-4 border-t border-line-dark-soft py-6 md:flex-row md:items-center md:justify-between">
+        <div className="mt-6 flex flex-col gap-4 border-t border-slate-200 py-6 md:flex-row md:items-center md:justify-between">
           <VerifyMarker verified={site.legalName.verified}>
-            <p className="text-legal text-slate-400">
+            <p className="text-black text-legal">
               © {year} {site.legalName.text}. All rights reserved.
             </p>
           </VerifyMarker>

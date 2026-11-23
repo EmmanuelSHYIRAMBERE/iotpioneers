@@ -346,7 +346,7 @@ export default function ConnectedGlobe({
               ref={(node) => {
                 iconRefs.current[index] = node;
               }}
-              className="pointer-events-none absolute top-0 left-0 flex size-9 items-center justify-center rounded-full border border-line-dark-strong bg-navy-900 text-pioneer-gold opacity-0"
+              className="pointer-events-none absolute top-0 left-0 flex size-9 items-center justify-center rounded-full border border-line-dark-strong bg-navy-900 text-bright-gold opacity-0"
             >
               <Icon size={18} strokeWidth={ICON_STROKE} />
             </span>

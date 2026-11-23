@@ -114,7 +114,7 @@ export function Navbar({
         <div
           aria-hidden="true"
           className={cn(
-            "absolute inset-x-0 top-4 bottom-0 border-b border-line-dark-soft bg-navy-950/92 backdrop-blur-[16px] transition-opacity duration-[240ms] ease-standard",
+            "absolute inset-x-0 top-4 bottom-0 border-b border-slate-200 bg-white/95 backdrop-blur-[16px] transition-opacity duration-[240ms] ease-standard",
             scrolled && !menuOpen ? "opacity-100" : "opacity-0",
           )}
         />
@@ -151,7 +151,7 @@ export function Navbar({
                       aria-current={active ? "location" : undefined}
                       className={cn(
                         "inline-flex min-h-11 items-center text-[0.9375rem] font-medium transition-colors duration-200",
-                        active ? "text-cloud-50" : "text-cloud-50/80 hover:text-cloud-50",
+                        active ? "text-navy-950" : "text-navy-950/70 hover:text-navy-950",
                       )}
                     >
                       {link.label}
@@ -176,7 +176,7 @@ export function Navbar({
               onClick={() => {
                 setMenuOpen((value) => !value);
               }}
-              className="relative flex size-11 items-center justify-center rounded-button text-cloud-50 lg:hidden"
+              className="relative flex size-11 items-center justify-center rounded-button text-navy-950 lg:hidden"
             >
               <span aria-hidden="true" className="relative block h-3 w-6">
                 <span

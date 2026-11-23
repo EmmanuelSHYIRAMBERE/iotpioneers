@@ -17,9 +17,9 @@ export interface StepRailProps {
 export function StepRail({ steps, current, progress, className }: StepRailProps) {
   return (
     <div aria-hidden="true" className={cn("relative w-6", className)}>
-      <div className="absolute top-3 bottom-3 left-1/2 w-px -translate-x-1/2 bg-line-dark">
+      <div className="absolute top-3 bottom-3 left-1/2 w-px -translate-x-1/2 bg-slate-200">
         <div
-          className="absolute inset-0 origin-top bg-cyan-400"
+          className="absolute inset-0 origin-top bg-bright-gold"
           style={{ transform: `scaleY(${Math.min(1, Math.max(0, progress)).toFixed(3)})` }}
         />
       </div>
@@ -30,15 +30,15 @@ export function StepRail({ steps, current, progress, className }: StepRailProps)
             <motion.span
               key={index}
               className={cn(
-                "flex size-6 items-center justify-center rounded-full border bg-navy-950 transition-colors duration-300",
-                lit ? "border-cyan-400" : "border-line-dark-strong",
+                "flex size-6 items-center justify-center rounded-full border bg-white transition-colors duration-300",
+                lit ? "border-bright-gold" : "border-slate-300",
               )}
               initial={false}
               animate={{ scale: index === current ? 1 : 0.8 }}
               transition={spring.snappy}
             >
               <span
-                className={cn("size-2 rounded-full", lit ? "bg-cyan-400" : "bg-slate-400/50")}
+                className={cn("size-2 rounded-full", lit ? "bg-bright-gold" : "bg-slate-300")}
               />
             </motion.span>
           );

@@ -11,7 +11,7 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        primary: "bg-bright-gold text-navy-950 hover:bg-pioneer-gold active:bg-pioneer-gold",
+        primary: "bg-bright-gold text-navy-950 hover:bg-bright-gold/80 active:bg-bright-gold/80",
         secondary: "border bg-transparent",
         ghost: "bg-transparent",
         link: "min-h-0 gap-1.5 px-0 font-sans font-medium underline-offset-4 hover:underline",
@@ -32,12 +32,12 @@ const buttonVariants = cva(
       {
         variant: "secondary",
         tone: "light",
-        className: "border-navy-950/20 text-navy-950 hover:border-deep-gold hover:text-deep-gold",
+        className: "border-navy-950/20 text-navy-950 hover:border-bright-gold hover:text-bright-gold",
       },
       { variant: "ghost", tone: "dark", className: "text-cloud-50 hover:bg-navy-800" },
       { variant: "ghost", tone: "light", className: "text-navy-950 hover:bg-slate-100" },
       { variant: "link", tone: "dark", className: "text-bright-gold" },
-      { variant: "link", tone: "light", className: "text-deep-gold" },
+      { variant: "link", tone: "light", className: "text-bright-gold" },
       { variant: "link", size: ["md", "lg"], className: "min-h-11 px-0" },
     ],
     defaultVariants: { variant: "primary", tone: "dark", size: "md" },

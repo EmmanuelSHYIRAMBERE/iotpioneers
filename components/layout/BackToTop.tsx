@@ -14,10 +14,10 @@ export function BackToTop() {
         window.scrollTo({ top: 0, behavior: reduced ? "auto" : "smooth" });
         document.getElementById("main-content")?.focus({ preventScroll: true });
       }}
-      className="group inline-flex min-h-11 items-center gap-2 text-small text-slate-400 transition-colors duration-200 hover:text-cloud-50"
+      className="group inline-flex min-h-11 items-center gap-2 text-small text-slate-600 transition-colors duration-200 hover:text-navy-950"
     >
       Back to top
-      <span className="flex size-8 items-center justify-center rounded-full border border-line-dark transition-colors duration-200 group-hover:border-line-dark-strong">
+      <span className="flex size-8 items-center justify-center rounded-full border border-slate-300 transition-colors duration-200 group-hover:border-slate-400">
         <ArrowUp
           aria-hidden="true"
           size={16}

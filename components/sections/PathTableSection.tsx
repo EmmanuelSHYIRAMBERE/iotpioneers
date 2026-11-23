@@ -9,7 +9,7 @@ import { ICON_STROKE } from "@/lib/tokens";
 import { DrawnCheck, PathRow } from "./PathTableMotion";
 
 const linkClass =
-  "group inline-flex min-h-11 items-center gap-1.5 font-medium text-deep-gold underline-offset-4 hover:underline";
+  "group inline-flex min-h-11 items-center gap-1.5 font-medium text-bright-gold underline-offset-4 hover:underline";
 
 /** CTA for one offering. The visible label is short; the accessible name names the destination. */
 function OfferingLink({ offering }: { offering: PathOffering }) {
@@ -149,7 +149,7 @@ export function PathTableSection() {
                             aria-hidden="true"
                             size={20}
                             strokeWidth={2}
-                            className="mt-0.5 shrink-0 text-deep-gold"
+                            className="mt-0.5 shrink-0 text-bright-gold"
                           />
                           {need.label}
                         </li>

@@ -52,7 +52,7 @@ export function ContactSection() {
     <section
       id="contact"
       aria-labelledby="contact-title"
-      className="surface-dark section-pad section-pad-joined relative isolate overflow-hidden bg-navy-950 text-cloud-50"
+      className="surface-light section-pad section-pad-joined relative isolate overflow-hidden bg-white text-navy-950"
     >
       <AnimatedBackground variant="ctaGradient" className="-z-30" />
       {ctaImage.src ? (
@@ -82,7 +82,7 @@ export function ContactSection() {
               {/* The headline glow fades in over 1200ms once in view (static with reduced motion). */}
               <motion.h2
                 id="contact-title"
-                className="mt-4 font-display text-display-l text-cloud-50"
+                className="mt-4 font-display text-display-l text-white"
                 initial={reduced ? false : { textShadow: GLOW_OFF }}
                 whileInView={{ textShadow: GLOW_ON }}
                 viewport={{ once: true, amount: viewportAmount.headline }}
@@ -95,7 +95,7 @@ export function ContactSection() {
                   emphasisClassName="text-bright-gold"
                 />
               </motion.h2>
-              <p className="mx-auto mt-6 max-w-[60ch] text-lead text-slate-400">
+              <p className="mx-auto mt-6 max-w-[60ch] text-lead text-slate-300">
                 {contactSection.lead}
               </p>
             </VerifyMarker>
@@ -110,6 +110,7 @@ export function ContactSection() {
                 href={tel}
                 size="lg"
                 variant="secondary"
+                tone="light"
                 icon={Phone}
                 iconPosition="left"
                 ariaLabel={`${contactSection.callLabel} on ${contact.phoneDisplay}`}
@@ -128,7 +129,7 @@ export function ContactSection() {
               className="pointer-events-none absolute -top-6 left-1/2 size-px"
             />
             <VerifyMarker verified={contact.verified}>
-              <ul className="flex flex-col items-center justify-center gap-x-8 gap-y-1 border-t border-line-dark pt-8 font-mono text-small md:flex-row">
+              <ul className="flex flex-col items-center justify-center gap-x-8 gap-y-1 border-t border-white/20 pt-8 font-mono text-small md:flex-row">
                 {details.map((detail) => {
                   const Icon = detail.icon;
                   return (
@@ -137,17 +138,17 @@ export function ContactSection() {
                         aria-hidden="true"
                         size={16}
                         strokeWidth={ICON_STROKE}
-                        className="text-pioneer-gold"
+                        className="text-bright-gold"
                       />
                       {detail.href ? (
                         <a
                           href={detail.href}
-                          className="inline-flex min-h-11 items-center text-cloud-50 underline-offset-4 hover:underline"
+                          className="inline-flex min-h-11 items-center text-white underline-offset-4 hover:underline"
                         >
                           {detail.text}
                         </a>
                       ) : (
-                        <span className="text-cloud-50">{detail.text}</span>
+                        <span className="text-white">{detail.text}</span>
                       )}
                       <CopyToClipboard value={detail.text} label={detail.copyLabel} />
                     </li>

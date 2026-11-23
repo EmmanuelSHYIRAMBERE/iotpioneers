@@ -86,7 +86,7 @@ export function CategoryTabs({ tabs, value, onChange, panelId, idPrefix }: Categ
               "relative isolate inline-flex min-h-11 shrink-0 items-center rounded-full border px-4 font-display text-[0.9375rem] font-medium whitespace-nowrap transition-colors duration-200",
               selected
                 ? "border-bright-gold text-navy-950"
-                : "border-slate-200 bg-white text-slate-600 hover:border-deep-gold hover:text-navy-950",
+                : "border-slate-200 bg-white text-slate-600 hover:border-bright-gold hover:text-navy-950",
             )}
           >
             {selected ? (

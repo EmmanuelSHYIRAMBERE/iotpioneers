@@ -108,18 +108,18 @@ export function MobileNavigation({
           initial={{ y: "-100%" }}
           animate={{ y: 0, transition: { duration: s(timing.menuOpen), ease: ease.outExpo } }}
           exit={{ y: "-100%", transition: { duration: s(timing.menuClose), ease: ease.in } }}
-          className="surface-dark fixed inset-0 z-40 flex flex-col overflow-y-auto bg-navy-950 px-5 pt-24 pb-8 sm:px-6 md:px-10"
+          className="surface-light fixed inset-0 z-40 flex flex-col overflow-y-auto bg-white px-5 pt-24 pb-8 sm:px-6 md:px-10"
         >
           <nav aria-label="Mobile">
             <ul className="flex flex-col">
               {links.map((link, index) => (
-                <motion.li key={link.href} {...item(index)} className="border-b border-line-dark">
+                <motion.li key={link.href} {...item(index)} className="border-b border-slate-200">
                   <a
                     href={link.href}
                     onClick={() => {
                       onClose(false);
                     }}
-                    className="block py-4 font-display text-menu font-semibold text-cloud-50"
+                    className="block py-4 font-display text-menu font-semibold text-navy-950"
                   >
                     {link.label}
                   </a>
@@ -130,7 +130,7 @@ export function MobileNavigation({
               {products.map((product) => (
                 <li
                   key={product.id}
-                  className="flex items-stretch rounded-card border border-line-dark"
+                  className="flex items-stretch rounded-card border border-slate-200"
                 >
                   <a
                     href={product.sectionHref}
@@ -139,8 +139,8 @@ export function MobileNavigation({
                     }}
                     className="min-w-0 flex-1 p-4"
                   >
-                    <span className="block font-display text-h4 text-cloud-50">{product.name}</span>
-                    <span className="mt-1 block text-small text-slate-400">
+                    <span className="block font-display text-h4 text-navy-950">{product.name}</span>
+                    <span className="mt-1 block text-small text-slate-600">
                       {product.description}
                     </span>
                   </a>
@@ -149,7 +149,7 @@ export function MobileNavigation({
                     target="_blank"
                     rel="noopener noreferrer"
                     aria-label={`Open the ${product.name} website (opens in a new tab)`}
-                    className="flex w-12 shrink-0 items-center justify-center border-l border-line-dark text-slate-400"
+                    className="flex w-12 shrink-0 items-center justify-center border-l border-slate-200 text-slate-600"
                   >
                     <ArrowUpRight aria-hidden="true" size={20} strokeWidth={ICON_STROKE} />
                   </a>

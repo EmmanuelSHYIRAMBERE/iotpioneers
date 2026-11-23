@@ -352,7 +352,7 @@ export function ProductGallery({ categories, products, labels, shopHref }: Produ
                 onClick={() => {
                   scrollByCards(-1);
                 }}
-                className="flex size-11 items-center justify-center rounded-full border border-navy-950/20 text-navy-950 transition-colors duration-200 hover:border-deep-gold hover:text-deep-gold disabled:pointer-events-none disabled:opacity-40"
+                className="flex size-11 items-center justify-center rounded-full border border-navy-950/20 text-navy-950 transition-colors duration-200 hover:border-bright-gold hover:text-bright-gold disabled:pointer-events-none disabled:opacity-40"
               >
                 <ArrowLeft aria-hidden="true" size={18} strokeWidth={ICON_STROKE} />
               </button>
@@ -364,7 +364,7 @@ export function ProductGallery({ categories, products, labels, shopHref }: Produ
                 onClick={() => {
                   scrollByCards(1);
                 }}
-                className="flex size-11 items-center justify-center rounded-full border border-navy-950/20 text-navy-950 transition-colors duration-200 hover:border-deep-gold hover:text-deep-gold disabled:pointer-events-none disabled:opacity-40"
+                className="flex size-11 items-center justify-center rounded-full border border-navy-950/20 text-navy-950 transition-colors duration-200 hover:border-bright-gold hover:text-bright-gold disabled:pointer-events-none disabled:opacity-40"
               >
                 <ArrowRight aria-hidden="true" size={18} strokeWidth={ICON_STROKE} />
               </button>

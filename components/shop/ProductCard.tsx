@@ -77,7 +77,7 @@ export function ProductCard({
         />
         <span
           aria-hidden="true"
-          className="pointer-events-none absolute inset-0 rounded-card border border-deep-gold opacity-0 transition-opacity duration-300 group-hover/card:opacity-100 group-focus-visible/card:opacity-100"
+          className="pointer-events-none absolute inset-0 rounded-card border border-bright-gold opacity-0 transition-opacity duration-300 group-hover/card:opacity-100 group-focus-visible/card:opacity-100"
         />
         <span className="relative block aspect-square overflow-hidden rounded-button bg-slate-100">
           {stock?.src ? (
@@ -120,13 +120,13 @@ export function ProductCard({
             </span>
           ) : null}
         </span>
-        <span className="relative mt-4 block px-1 font-mono text-small font-medium tracking-[0.1em] text-deep-gold uppercase">
+        <span className="relative mt-4 block px-1 font-mono text-small font-medium tracking-[0.1em] text-bright-gold uppercase">
           {category}
         </span>{" "}
         <span className="relative mt-1 line-clamp-2 block min-h-[2.6em] px-1 font-display text-h4 text-navy-950">
           {displayName}
         </span>{" "}
-        <span className="relative mt-auto flex items-center gap-1 px-1 pt-4 text-small font-medium text-deep-gold">
+        <span className="relative mt-auto flex items-center gap-1 px-1 pt-4 text-small font-medium text-bright-gold">
           <span>
             {/* Spaces sit outside the hidden spans: accessible name computation trims text at
                 element edges, which would run the words together. */}

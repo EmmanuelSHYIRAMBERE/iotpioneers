@@ -92,7 +92,7 @@ export function IntroImages({ large, small, annotation, annotationVerified }: In
               <span className="size-2 rounded-full bg-slate-400/50" />
               <span className="size-2 rounded-full bg-slate-400/50" />
             </div>
-            <div aria-hidden="true" className="h-0.5 bg-pioneer-gold" />
+            <div aria-hidden="true" className="h-0.5 bg-bright-gold" />
             <div className="relative aspect-[4/5] overflow-hidden">
               <motion.div className="h-full w-full" variants={clipScaleInner(!desktop)}>
                 <Picture

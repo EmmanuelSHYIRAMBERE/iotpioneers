@@ -104,7 +104,7 @@ export function PrincipleLine({ items }: PrincipleLineProps) {
       <div
         aria-hidden="true"
         className={cn(
-          "absolute bg-line-dark",
+          "absolute bg-slate-200",
           horizontal
             ? "top-[11px] right-[12.5%] left-[12.5%] h-px"
             : "top-3 bottom-3 left-[11px] w-px",
@@ -137,16 +137,16 @@ export function PrincipleLine({ items }: PrincipleLineProps) {
               <motion.span
                 aria-hidden="true"
                 className={cn(
-                  "flex size-6 items-center justify-center rounded-full border bg-navy-950 transition-colors duration-300",
+                  "flex size-6 items-center justify-center rounded-full border bg-white transition-colors duration-300",
                   horizontal ? "relative" : "absolute top-0 left-0",
-                  lit ? "border-cyan-400" : "border-line-dark-strong",
+                  lit ? "border-bright-gold" : "border-slate-300",
                 )}
                 initial={false}
                 animate={{ scale: lit ? 1 : 0.6 }}
                 transition={spring.snappy}
               >
                 <span
-                  className={cn("size-2 rounded-full", lit ? "bg-cyan-400" : "bg-slate-400/50")}
+                  className={cn("size-2 rounded-full", lit ? "bg-bright-gold" : "bg-slate-300")}
                 />
               </motion.span>
               <motion.div
@@ -156,11 +156,11 @@ export function PrincipleLine({ items }: PrincipleLineProps) {
                 className={cn(horizontal && "mt-6 w-full flex-1")}
               >
                 {/* Principle card (card system): left aligned text, design audit issue 29. */}
-                <TiltCard tone="dark" className="text-left">
+                <TiltCard tone="light" className="text-left">
                   <VerifyMarker verified={item.verified}>
-                    <p className="font-mono text-small text-slate-400">{item.index}</p>
-                    <h3 className="mt-2 font-display text-h4 text-cloud-50">{item.title}</h3>
-                    <p className="mt-2 text-body text-slate-400">{item.text}</p>
+                    <p className="font-mono text-small text-slate-600">{item.index}</p>
+                    <h3 className="mt-2 font-display text-h4 text-navy-950">{item.title}</h3>
+                    <p className="mt-2 text-body text-slate-600">{item.text}</p>
                   </VerifyMarker>
                 </TiltCard>
               </motion.div>

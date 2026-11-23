@@ -21,7 +21,7 @@ export function IconTile({ icon: Icon, tone, className }: IconTileProps) {
       className={cn(
         "flex size-12 shrink-0 items-center justify-center rounded-card",
         tone === "gold"
-          ? "bg-linear-to-br from-bright-gold to-deep-gold text-navy-950"
+          ? "bg-linear-to-br from-bright-gold to-bright-gold/70 text-navy-950"
           : "bg-linear-to-br from-cyan-400 to-navy-900 text-white",
         className,
       )}
