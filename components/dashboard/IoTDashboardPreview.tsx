@@ -86,7 +86,7 @@ function Region({
 
 /**
  * Stylised IoTDataHub dashboard with simulated, seeded data. Not the real product UI and
- * not connected to any account; the demo badge and caption say so.
+ * not connected to any account; the badge and caption say so.
  */
 export function IoTDashboardPreview({
   labels,
@@ -178,13 +178,13 @@ export function IoTDashboardPreview({
     {
       id: "humidity",
       message: `Humidity above ${String(HUMIDITY_THRESHOLD)} % threshold`,
-      device: "Demo Greenhouse Sensor A",
+      device: "Greenhouse Sensor A",
       ago: "2 min ago",
     },
     {
       id: "offline",
       message: "Device stopped reporting",
-      device: "Demo Weather Station",
+      device: "Weather Station",
       ago: "1 h ago",
     },
   ];
@@ -354,7 +354,7 @@ export function IoTDashboardPreview({
     return (
       <div
         role="group"
-        aria-label="IoTDataHub demo dashboard with simulated data"
+        aria-label="IoTDataHub dashboard with simulated data"
         className="relative rounded-frame border border-line-dark bg-navy-950 p-3 shadow-highlight"
       >
         <div className="mb-3 flex items-center justify-between gap-2">
@@ -408,7 +408,7 @@ interface DesktopFrameProps {
   children: ReactNode;
 }
 
-/** Browser frame, the persistent demo badge, floating panels and data packets. */
+/** Browser frame, the persistent badge, floating panels and data packets. */
 function DesktopFrame({
   labels,
   activeStep,
@@ -429,7 +429,7 @@ function DesktopFrame({
       <div className="relative">
         <div
           role="group"
-          aria-label="IoTDataHub demo dashboard with simulated data"
+          aria-label="IoTDataHub dashboard with simulated data"
           className="relative w-full overflow-hidden rounded-frame border border-line-dark bg-navy-950 shadow-highlight"
         >
           <div className="flex h-10 items-center gap-3 border-b border-line-dark bg-navy-900 pr-1 pl-4">
@@ -464,7 +464,7 @@ function DesktopFrame({
               <PlugZap size={18} strokeWidth={ICON_STROKE} />
             </span>
             <span className="min-w-0">
-              <span className="block text-small text-cloud-50">Demo Greenhouse Sensor A</span>
+              <span className="block text-small text-cloud-50">Greenhouse Sensor A</span>
               <span className="flex items-center gap-1.5 font-mono text-small text-green-400">
                 <span className="size-1.5 rounded-full bg-green-400" /> Connected · HTTP
               </span>

@@ -19,7 +19,6 @@ import { AnimatedBackground } from "@/components/visuals/AnimatedBackground";
 import { runStagger } from "@/lib/motion";
 import { ICON_STROKE } from "@/lib/tokens";
 import { BackToTop } from "./BackToTop";
-import { BrandSignature } from "./BrandSignature";
 import { Logo } from "./Logo";
 
 const SOCIAL_ICONS: Record<SocialPlatform, LucideIcon> = {
@@ -93,7 +92,7 @@ export function Footer() {
                             target="_blank"
                             rel="noopener noreferrer"
                             aria-label={`${social.label} (opens in a new tab)`}
-                            className="text-black flex size-11 items-center justify-center rounded-button transition-colors duration-200 hover:bg-slate-100 hover:text-navy-950"
+                            className="text-black border-yellow-200 flex size-11 items-center justify-center rounded-button border-1 transition-colors duration-200 hover:bg-slate-100 hover:text-navy-950"
                           >
                             <Icon aria-hidden="true" size={20} strokeWidth={ICON_STROKE} />
                           </a>
@@ -191,10 +190,6 @@ export function Footer() {
               </VerifyMarker>
             </div>
           </Reveal>
-        </div>
-
-        <div className="mt-20 md:mt-24">
-          <BrandSignature text={site.legalName.text.replace(/\s+Ltd$/, "")} />
         </div>
 
         <div className="mt-6 flex flex-col gap-4 border-t border-slate-200 py-6 md:flex-row md:items-center md:justify-between">
